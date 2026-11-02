@@ -5,7 +5,7 @@ import { addDays, daysInMonth, eachDay, weekdayMon0, type ISODate } from './date
 import type { AppData, Movement, Settings, Shift } from './types'
 
 export const DEFAULT_SETTINGS: Settings = {
-  name: 'Javier Morales',
+  name: 'Pablo Álvarez',
   activity: 'Taxi en Madrid · autónomo sin empleados',
   monthlyQuota: 310,
   irpfPct: 15,

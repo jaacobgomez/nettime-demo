@@ -26,10 +26,15 @@ type Store = {
   toasts: Toast[]
   notify: (text: string, tone?: Toast['tone']) => void
   dismiss: (id: number) => void
+  tourOpen: boolean
+  startTour: () => void
+  endTour: () => void
   form: FormRequest | null
   openForm: (f: FormRequest) => void
   closeForm: () => void
 }
+
+const TOUR_KEY = 'nettime-tutorial-visto'
 
 const Ctx = createContext<Store | null>(null)
 
@@ -40,6 +45,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [period, setPeriod] = useState<PeriodKey>('month')
   const [toasts, setToasts] = useState<Toast[]>([])
   const [form, setForm] = useState<FormRequest | null>(null)
+  const [tourOpen, setTourOpen] = useState(() => {
+    try {
+      return localStorage.getItem(TOUR_KEY) === null
+    } catch {
+      return false
+    }
+  })
   const toastId = useRef(0)
   const saveFailed = useRef(false)
 
@@ -116,9 +128,23 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setPeriod('month')
   }, [today])
 
+  const startTour = useCallback(() => {
+    setForm(null)
+    if (!window.location.hash.startsWith('#/resumen') && window.location.hash !== '') window.location.hash = '#/resumen'
+    setTourOpen(true)
+  }, [])
+  const endTour = useCallback(() => {
+    setTourOpen(false)
+    try {
+      localStorage.setItem(TOUR_KEY, '1')
+    } catch {
+      // sin almacenamiento: se volverá a mostrar, no pasa nada
+    }
+  }, [])
+
   const value: Store = {
     data, today, period, setPeriod, saveMovement, deleteMovement, saveShift, deleteShift, updateSettings, resetDemo,
-    toasts, notify, dismiss, form, openForm: setForm, closeForm: () => setForm(null),
+    toasts, notify, dismiss, tourOpen, startTour, endTour, form, openForm: setForm, closeForm: () => setForm(null),
   }
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

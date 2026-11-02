@@ -37,7 +37,7 @@ export default function Jornadas() {
         <Stat label="Horas trabajadas" value={hoursLabel(hours)} sub="Horas efectivas, sin descansos" />
         <Stat label="Jornadas" value={list.length} sub={empty ? `${empty} sin movimientos asociados` : 'Todas con movimientos'} />
         <div className="col-span-2 lg:col-span-1">
-          <Stat label="Margen operativo por hora" tone="brand" value={hours > 0 ? perHour(margin / hours) : <span className="text-lg text-ink-3">Sin horas registradas</span>} sub="De los movimientos asociados a jornadas" />
+          <Stat label="Margen operativo por hora" tone="margin" value={hours > 0 ? perHour(margin / hours) : <span className="text-lg text-ink-3">Sin horas registradas</span>} sub="De los movimientos asociados a jornadas" />
         </div>
       </div>
 
@@ -70,7 +70,7 @@ export default function Jornadas() {
                     <span className="text-ink-3">Sin movimientos asociados</span>
                   ) : (
                     <>
-                      <p><span className="text-brand-700">+{eur(incomeBase)}</span>{expenses > 0 && <span className="text-ink-2"> · −{eur(expenses)}</span>}</p>
+                      <p><span className="font-semibold text-income-700">+{eur(incomeBase)}</span>{expenses > 0 && <span className="font-semibold text-expense-700"> · −{eur(expenses)}</span>}</p>
                       <p className="text-xs text-ink-3">{perHour(marginPerHour)} de margen</p>
                     </>
                   )}

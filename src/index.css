@@ -1,48 +1,95 @@
+@import '@fontsource-variable/outfit';
+@import '@fontsource-variable/figtree';
 @import 'tailwindcss';
 
 @theme {
-  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-sans: 'Figtree Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Outfit Variable', 'Figtree Variable', ui-sans-serif, system-ui, sans-serif;
 
-  --color-canvas: #f4f6f5;
-  --color-ink: #14201d;
-  --color-ink-2: #4a5754;
-  --color-ink-3: #637170;
-  --color-line: #e2e7e5;
+  /* Tinta y papel: el logo es blanco y negro, la marca también */
+  --color-ink: #101814;
+  --color-ink-soft: #1b2621;
+  --color-ink-2: #4b5450;
+  --color-ink-3: #636b67;
+  --color-canvas: #f3f1ec;
+  --color-line: #e3e0d8;
+  --color-line-strong: #cfcbc1;
 
-  --color-brand-50: #ecfdf8;
-  --color-brand-100: #d1f5ea;
-  --color-brand-500: #0f9488;
-  --color-brand-600: #0f766e;
-  --color-brand-700: #115e59;
-  --color-brand-900: #0b3b37;
+  /* Verde NetTime: margen y lo que te queda */
+  --color-brand-50: #eaf6ef;
+  --color-brand-100: #cfeadb;
+  --color-brand-300: #7fd1a6;
+  --color-brand-500: #1f9d6b;
+  --color-brand-600: #168257;
+  --color-brand-700: #0f6646;
+  --color-mint: #7ee2ad;
 
   /* Series de datos (validadas para daltonismo) */
-  --color-income: #0f9488;
-  --color-expense: #dd6a30;
-  --color-reserve: #6d5bd0;
-  --color-quota: #8a9693;
+  --color-income: #2f6fde;
+  --color-income-50: #edf3fd;
+  --color-income-700: #1d4fae;
+  --color-expense: #e5484d;
+  --color-expense-50: #fdeeee;
+  --color-expense-700: #b3262b;
+  --color-margin: #1f9d6b;
+  --color-reserve: #7c5cd6;
+  --color-reserve-50: #f3f0fc;
+  --color-quota: #8d928e;
 
-  --animate-fade-up: fade-up 180ms ease-out;
+  --animate-fade-up: fade-up 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-pop: pop 260ms cubic-bezier(0.2, 0.9, 0.3, 1.2);
   @keyframes fade-up {
-    from { opacity: 0; transform: translateY(6px); }
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes pop {
+    from { opacity: 0; transform: scale(0.96); }
     to { opacity: 1; transform: none; }
   }
 }
 
 @layer base {
   html { -webkit-text-size-adjust: 100%; }
-  body { @apply bg-canvas text-ink antialiased; }
+  body { @apply bg-canvas font-sans text-ink antialiased; }
+  h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.015em; }
   :focus-visible {
-    outline: 2px solid var(--color-brand-600);
+    outline: 2px solid var(--color-income);
     outline-offset: 2px;
   }
-  dialog::backdrop { background: rgb(15 23 21 / 0.45); }
-  dialog[open] { animation: fade-up 160ms ease-out; }
+  dialog::backdrop { background: rgb(16 24 20 / 0.55); backdrop-filter: blur(2px); }
+  dialog[open] { animation: pop 200ms ease-out; }
   button:not(:disabled), summary, select { cursor: pointer; }
 }
 
+/* Cifras: tipografía de display con números tabulares */
 .num { font-variant-numeric: tabular-nums; }
+.figure { font-family: var(--font-display); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+
+/* Logo como máscara: toma el color del texto */
+.logo-mask {
+  display: inline-block;
+  background-color: currentColor;
+  -webkit-mask: var(--logo) center / contain no-repeat;
+  mask: var(--logo) center / contain no-repeat;
+}
+
+/* Fondo de la tarjeta principal: cuadrícula fina tipo papel milimetrado */
+.grid-paper {
+  background-image:
+    radial-gradient(120% 90% at 100% 0%, rgb(126 226 173 / 0.16), transparent 55%),
+    linear-gradient(rgb(255 255 255 / 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.045) 1px, transparent 1px);
+  background-size: auto, 28px 28px, 28px 28px;
+}
+
+/* Entrada escalonada de bloques */
+.stagger > * { animation: fade-up 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.stagger > *:nth-child(2) { animation-delay: 50ms; }
+.stagger > *:nth-child(3) { animation-delay: 100ms; }
+.stagger > *:nth-child(4) { animation-delay: 150ms; }
+.stagger > *:nth-child(5) { animation-delay: 200ms; }
+.stagger > *:nth-child(6) { animation-delay: 250ms; }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; transition-duration: 0.01ms !important; }
 }

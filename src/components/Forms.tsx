@@ -128,7 +128,7 @@ function MovementForm({ req }: { req: Extract<FormRequest, { type: 'movement' }>
           </Field>
         ) : <div className="hidden sm:block" />}
         {isInc && base !== null && base > 0 && (
-          <p className="num rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-900 sm:col-span-2">
+          <p className="num rounded-lg bg-income-50 px-3 py-2 text-sm text-income-700 sm:col-span-2">
             Base {eur(base)} + IVA {eur(vatPreview)} = <strong>{eur(base + vatPreview)}</strong> cobrados. El IVA va a la reserva fiscal, no al disponible.
           </p>
         )}
@@ -255,7 +255,7 @@ function ShiftForm({ req }: { req: Extract<FormRequest, { type: 'shift' }> }) {
           </Field>
         </div>
 
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-900 sm:col-span-6" aria-live="polite">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg bg-canvas px-3 py-2 text-sm text-ink sm:col-span-6" aria-live="polite">
           <span>Horas efectivas: <strong className="num">{preview === null ? '—' : hoursLabel(preview)}</strong></span>
           {overnight && (
             <span className="inline-flex items-center gap-1"><Moon className="size-4" aria-hidden /> Termina el día siguiente</span>
@@ -278,7 +278,7 @@ function ShiftForm({ req }: { req: Extract<FormRequest, { type: 'shift' }> }) {
                 return (
                   <li key={m.id}>
                     <label className="flex cursor-pointer items-start gap-3 px-3 py-2 text-sm hover:bg-canvas">
-                      <input type="checkbox" checked={selected.has(m.id)} onChange={() => toggle(m.id)} className="mt-0.5 size-4 accent-brand-600" />
+                      <input type="checkbox" checked={selected.has(m.id)} onChange={() => toggle(m.id)} className="mt-0.5 size-4 accent-ink" />
                       <span className="min-w-0 flex-1">
                         <span className="num block truncate">{movLabel(m)}</span>
                         <span className="block text-xs text-ink-3">

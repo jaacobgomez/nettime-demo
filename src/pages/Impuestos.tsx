@@ -102,14 +102,14 @@ export default function Impuestos() {
             <div><dt className="text-ink-3">Apartado</dt><dd className="text-lg font-semibold">{eur(setAside)}</dd></div>
             <div>
               <dt className="text-ink-3">{pending > 0 ? 'Pendiente' : 'De más'}</dt>
-              <dd className={cx('text-lg font-semibold', pending > 0 ? 'text-reserve' : 'text-brand-700')}>{eur(Math.abs(pending))}</dd>
+              <dd className={cx('figure text-lg font-semibold', pending > 0 ? 'text-reserve' : 'text-brand-700')}>{eur(Math.abs(pending))}</dd>
             </div>
           </dl>
           <Progress value={pct} label="Parte de la reserva ya apartada" tone="reserve" />
           <p className="mt-2 flex items-center gap-1.5 text-sm text-ink-2">
             {pending > 0
               ? <>Llevas el {Math.round(pct)} % apartado. Te faltan <strong className="num text-ink">{eur(pending)}</strong>.</>
-              : <><CircleCheck className="size-4 text-brand-600" aria-hidden /> Tienes apartado todo lo calculado.</>}
+              : <><CircleCheck className="size-4 text-margin" aria-hidden /> Tienes apartado todo lo calculado.</>}
           </p>
           <div className="mt-4 border-t border-line pt-4"><SetAsideForm key={setAside} current={setAside} /></div>
           <p className="mt-3 text-xs text-ink-3">La hucha es un seguimiento orientativo: no mueve dinero ni se conecta a ningún banco.</p>

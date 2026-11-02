@@ -55,16 +55,16 @@ export default function Rentabilidad() {
         <Card><EmptyState icon={<Lightbulb className="size-5" aria-hidden />} title="Historial insuficiente">Registra jornadas y asocia sus ingresos para comparar días y horarios.</EmptyState></Card>
       ) : (
         <>
-          <Card aria-labelledby="hallazgos" className="mb-4 border-brand-100 bg-brand-50/50">
-            <CardTitle id="hallazgos"><span className="inline-flex items-center gap-2"><Lightbulb className="size-5 text-brand-600" aria-hidden /> Lo que dicen tus registros</span></CardTitle>
+          <Card aria-labelledby="hallazgos" className="grid-paper mb-4 !border-ink !bg-ink text-white">
+            <CardTitle id="hallazgos"><span className="inline-flex items-center gap-2"><Lightbulb className="size-5 text-mint" aria-hidden /> <span className="text-white">Lo que dicen tus registros</span></span></CardTitle>
             {p.insights.length === 0 ? (
-              <p className="text-sm text-ink-2">Historial insuficiente: hacen falta al menos {MIN_OBS} jornadas por grupo para destacar una conclusión.</p>
+              <p className="text-sm text-white/70">Historial insuficiente: hacen falta al menos {MIN_OBS} jornadas por grupo para destacar una conclusión.</p>
             ) : (
-              <ul className="space-y-2 text-sm text-ink">
-                {p.insights.map((t) => <li key={t} className="flex gap-2"><span className="mt-2 size-1.5 shrink-0 rounded-full bg-brand-600" aria-hidden />{t}</li>)}
+              <ul className="space-y-2.5 text-[15px] leading-relaxed text-white/90">
+                {p.insights.map((t) => <li key={t} className="flex gap-2"><span className="mt-2.5 size-1.5 shrink-0 rounded-full bg-mint" aria-hidden />{t}</li>)}
               </ul>
             )}
-            <p className="mt-3 text-xs text-ink-2">Son datos de tu pasado, no una predicción. Solo se destacan grupos con {MIN_OBS} o más jornadas.</p>
+            <p className="mt-4 text-xs text-white/55">Son datos de tu pasado, no una predicción. Solo se destacan grupos con {MIN_OBS} o más jornadas.</p>
           </Card>
 
           <div className="grid gap-4 lg:grid-cols-5">
@@ -73,17 +73,18 @@ export default function Rentabilidad() {
               <div className="h-64" role="img" aria-label="Gráfico de barras del margen operativo por hora de cada día de la semana. La tabla siguiente tiene los mismos datos.">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chart} margin={{ top: 22, right: 8, left: 0, bottom: 0 }}>
-                    <CartesianGrid vertical={false} stroke="#e8ecea" />
+                    <CartesianGrid vertical={false} stroke="#ebe8e1" />
                     <XAxis dataKey="short" tick={{ fontSize: 12, fill: '#4a5754' }} tickLine={false} axisLine={{ stroke: '#e2e7e5' }} />
                     <YAxis tickFormatter={(v: number) => eur0(v)} tick={{ fontSize: 11, fill: '#637170' }} tickLine={false} axisLine={false} width={56} />
-                    <Tooltip content={WeekTooltip} cursor={{ fill: 'rgba(15,148,136,0.06)' }} />
-                    {avg !== null && <ReferenceLine y={avg} stroke="#4a5754" strokeDasharray="4 4" />}
+                    <Tooltip content={WeekTooltip} cursor={{ fill: 'rgba(16,24,20,0.04)' }} />
+                    {avg !== null && <ReferenceLine y={avg} stroke="#101814" strokeDasharray="4 4" />}
                     <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={44} isAnimationActive={false}>
                       {chart.map((g) => (
                         <Cell
                           key={g.key}
-                          fill={g.reliability === 'suficiente' ? (g.marginPerHour === bestRate ? '#0f766e' : '#5fb8ad') : '#d6dcda'}
-                          stroke={g.reliability === 'orientativo' ? '#8a9693' : undefined}
+                          fill={g.reliability === 'suficiente' ? '#1f9d6b' : '#d9d6ce'}
+                          fillOpacity={g.reliability === 'suficiente' ? (g.marginPerHour === bestRate ? 0.95 : 0.42) : 1}
+                          stroke={g.reliability === 'orientativo' ? '#8d928e' : g.reliability === 'suficiente' ? '#1f9d6b' : undefined}
                           strokeDasharray={g.reliability === 'orientativo' ? '3 3' : undefined}
                         />
                       ))}
@@ -92,9 +93,9 @@ export default function Rentabilidad() {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-              <p className="mt-2 text-xs text-ink-3">Sobre cada barra, el número de jornadas (j.).{avg !== null && ` Línea discontinua: tu media, ${eur(avg)}/h.`} Las barras grises con borde discontinuo tienen menos de {MIN_OBS} jornadas: resultado orientativo.</p>
+              <p className="mt-2 text-xs text-ink-3">Sobre cada barra, el número de jornadas (j.).{avg !== null && ` Línea discontinua: tu media, ${eur(avg)}/h.`} La barra más intensa es el mejor día; las grises con borde discontinuo tienen menos de {MIN_OBS} jornadas (resultado orientativo).</p>
               <details className="mt-3 text-sm">
-                <summary className="font-medium text-brand-700">Ver los datos en tabla</summary>
+                <summary className="font-medium text-ink">Ver los datos en tabla</summary>
                 <table className="num mt-2 w-full text-left text-sm">
                   <thead><tr className="text-xs text-ink-3"><th className="py-1 font-medium">Día</th><th className="py-1 font-medium">Jornadas</th><th className="py-1 font-medium">Horas</th><th className="py-1 text-right font-medium">Margen/hora</th></tr></thead>
                   <tbody className="divide-y divide-line">
@@ -156,9 +157,9 @@ export default function Rentabilidad() {
                         return (
                           <td key={d} className="py-1.5 pr-2">
                             {!g ? <span className="text-ink-3">—</span> : (
-                              <span className={cx('inline-flex flex-col rounded-lg px-2 py-1', best ? 'bg-brand-600 text-white' : g.reliability === 'suficiente' ? 'bg-brand-50' : '')}>
+                              <span className={cx('inline-flex flex-col rounded-lg px-2 py-1', best ? 'bg-margin text-white' : g.reliability === 'suficiente' ? 'bg-brand-50' : '')}>
                                 <span className="font-semibold">{eur(g.marginPerHour!)}/h{best && ' · mejor'}</span>
-                                <span className={cx('text-xs', best ? 'text-brand-100' : 'text-ink-3')}>
+                                <span className={cx('text-xs', best ? 'text-white/80' : 'text-ink-3')}>
                                   {g.shifts} j.{g.reliability === 'orientativo' && ' · orientativo'}
                                 </span>
                               </span>

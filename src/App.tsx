@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { FormHost } from './components/Forms'
 import { Layout, ROUTES, type Route } from './components/Layout'
+import { Tour } from './components/Tour'
 import { Toasts } from './components/ui'
 import Impuestos from './pages/Impuestos'
 import Jornadas from './pages/Jornadas'
@@ -47,6 +48,7 @@ export default function App() {
         <Page />
       </Layout>
       <FormHost />
+      <Tour />
       <Toasts />
     </StoreProvider>
   )

@@ -5,26 +5,35 @@ import { dateMed, eur } from '../lib/format'
 import type { Movement } from '../lib/types'
 import { IconButton, cx } from './ui'
 
-export function Stat({ label, value, sub, tone = 'neutral', icon, help }: {
+export type Tone = 'neutral' | 'income' | 'expense' | 'margin' | 'reserve'
+
+const SWATCH: Record<Tone, string> = {
+  neutral: 'bg-ink-3',
+  income: 'bg-income',
+  expense: 'bg-expense',
+  margin: 'bg-margin',
+  reserve: 'bg-reserve',
+}
+
+/** Muestra de color de la serie: la misma que en los gráficos, así sirve de leyenda. */
+export function Swatch({ tone, className }: { tone: Tone; className?: string }) {
+  return <span className={cx('inline-block size-2.5 shrink-0 rounded-[3px]', SWATCH[tone], className)} aria-hidden />
+}
+
+export function Stat({ label, value, sub, tone = 'neutral' }: {
   label: string
   value: ReactNode
   sub?: ReactNode
-  tone?: 'neutral' | 'income' | 'expense' | 'brand' | 'reserve'
-  icon?: ReactNode
-  help?: string
+  tone?: Tone
 }) {
-  const bar = { neutral: 'bg-line', income: 'bg-income', expense: 'bg-expense', brand: 'bg-brand-600', reserve: 'bg-reserve' }[tone]
   return (
-    <div className={cx('relative min-w-0 overflow-hidden rounded-2xl border bg-white p-4', tone === 'brand' ? 'border-brand-100 ring-1 ring-brand-100' : 'border-line')}>
-      <span className={cx('absolute inset-y-0 left-0 w-1', bar)} aria-hidden />
-      <div className="flex items-center gap-1.5 text-sm text-ink-2" title={help}>
-        {icon}
-        <span>{label}</span>
+    <div className="min-w-0 rounded-xl border border-line bg-white px-4 py-4 sm:px-5">
+      <div className="flex items-center gap-2 text-sm font-medium text-ink-2">
+        <Swatch tone={tone} />
+        <span className="truncate">{label}</span>
       </div>
-      <div className={cx('num mt-1.5 truncate text-[1.6rem] leading-tight font-semibold tracking-tight', tone === 'brand' ? 'text-brand-700' : 'text-ink')}>
-        {value}
-      </div>
-      {sub && <div className="mt-1 text-xs text-ink-3">{sub}</div>}
+      <div className="figure mt-2 truncate text-[1.65rem] leading-none font-semibold text-ink sm:text-[1.85rem]">{value}</div>
+      {sub && <div className="mt-2 text-[13px] leading-snug text-ink-3">{sub}</div>}
     </div>
   )
 }
@@ -32,7 +41,7 @@ export function Stat({ label, value, sub, tone = 'neutral', icon, help }: {
 export function KindTag({ m }: { m: Movement }) {
   const inc = isIncome(m)
   return (
-    <span className={cx('inline-flex items-center gap-1 text-xs font-medium', inc ? 'text-brand-700' : 'text-orange-800')}>
+    <span className={cx('inline-flex items-center gap-1 text-xs font-semibold', inc ? 'text-income-700' : 'text-expense-700')}>
       {inc ? <ArrowUpRight className="size-3.5" aria-hidden /> : <ArrowDownRight className="size-3.5" aria-hidden />}
       {inc ? 'Ingreso' : 'Gasto'}
     </span>
@@ -42,7 +51,7 @@ export function KindTag({ m }: { m: Movement }) {
 export function Amount({ m, className }: { m: Movement; className?: string }) {
   const inc = isIncome(m)
   return (
-    <span className={cx('num font-semibold whitespace-nowrap', inc ? 'text-brand-700' : 'text-ink', className)}>
+    <span className={cx('figure font-semibold whitespace-nowrap', inc ? 'text-income-700' : 'text-expense-700', className)}>
       {inc ? '+' : '−'}{eur(inc ? m.base : m.amount)}
     </span>
   )
@@ -56,18 +65,18 @@ export function VatNote({ m }: { m: Movement }) {
 export function MovementLine({ m, onEdit, onDelete }: { m: Movement; onEdit?: () => void; onDelete?: () => void }) {
   const inc = isIncome(m)
   return (
-    <li className="flex items-center gap-3 py-2.5">
-      <span className={cx('flex size-9 shrink-0 items-center justify-center rounded-full', inc ? 'bg-brand-50 text-brand-700' : 'bg-orange-50 text-orange-700')} aria-hidden>
+    <li className="flex items-center gap-3 py-3">
+      <span className={cx('flex size-9 shrink-0 items-center justify-center rounded-full', inc ? 'bg-income-50 text-income-700' : 'bg-expense-50 text-expense-700')} aria-hidden>
         {inc ? <ArrowUpRight className="size-4" /> : <ArrowDownRight className="size-4" />}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-ink">{m.concept}</p>
+        <p className="truncate text-[15px] font-medium text-ink">{m.concept}</p>
         <p className="truncate text-xs text-ink-3">
           {dateMed(m.date)} · <span className="sr-only">{inc ? 'Ingreso' : 'Gasto'}, </span>{inc ? m.source : m.category}
         </p>
       </div>
       <div className="flex flex-col items-end">
-        <Amount m={m} className="text-sm" />
+        <Amount m={m} className="text-[15px]" />
         <VatNote m={m} />
       </div>
       {(onEdit || onDelete) && (
@@ -81,20 +90,18 @@ export function MovementLine({ m, onEdit, onDelete }: { m: Movement; onEdit?: ()
 }
 
 /** Barra de progreso con texto: nunca depende solo del color. */
-export function Progress({ value, label, tone = 'brand' }: { value: number; label: string; tone?: 'brand' | 'reserve' }) {
+export function Progress({ value, label, tone = 'margin' }: { value: number; label: string; tone?: 'margin' | 'reserve' }) {
   const v = Math.max(0, Math.min(100, value))
   return (
-    <div>
-      <div
-        role="progressbar"
-        aria-label={label}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={Math.round(v)}
-        className="h-3 overflow-hidden rounded-full bg-canvas ring-1 ring-line ring-inset"
-      >
-        <div className={cx('h-full rounded-full transition-[width] duration-500', tone === 'brand' ? 'bg-brand-600' : 'bg-reserve')} style={{ width: `${v}%` }} />
-      </div>
+    <div
+      role="progressbar"
+      aria-label={label}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={Math.round(v)}
+      className="h-3 overflow-hidden rounded-full bg-canvas ring-1 ring-line ring-inset"
+    >
+      <div className={cx('h-full rounded-full transition-[width] duration-700 ease-out', tone === 'margin' ? 'bg-margin' : 'bg-reserve')} style={{ width: `${v}%` }} />
     </div>
   )
 }

@@ -4,7 +4,7 @@ import { buildSeed } from './seed'
 import type { AppData, Movement, Settings, Shift } from './types'
 
 export const STORAGE_KEY = 'nettime-demo'
-export const STORAGE_VERSION = 1
+export const STORAGE_VERSION = 2
 
 type Stored = { version: number; data: AppData }
 
@@ -35,9 +35,15 @@ export function validateData(v: unknown): v is AppData {
     Array.isArray(v.shifts) && v.shifts.every(validShift) && validSettings(v.settings) && isValidISO(v.seededOn)
 }
 
-/** Migraciones de versiones anteriores. Hoy solo existe la v1. */
+/** Migraciones de versiones anteriores. */
 function migrate(stored: { version: number; data: unknown }): unknown {
-  return stored.version === STORAGE_VERSION ? stored.data : null
+  let { version, data } = stored
+  // v1 → v2: el perfil de ejemplo pasa a llamarse Pablo Álvarez
+  if (version === 1 && isRec(data) && isRec(data.settings)) {
+    if (data.settings.name === 'Javier Morales') data = { ...data, settings: { ...data.settings, name: 'Pablo Álvarez' } }
+    version = 2
+  }
+  return version === STORAGE_VERSION ? data : null
 }
 
 export type LoadResult = { data: AppData; status: 'saved' | 'fresh' | 'recovered' }

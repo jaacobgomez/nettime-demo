@@ -128,6 +128,10 @@ export type Summary = {
   /** null cuando no hay horas registradas */
   availablePerHour: number | null
   marginPerHour: number | null
+  /** Ingresos sin IVA por hora trabajada: lo que "parece" que ganas */
+  billedPerHour: number | null
+  /** De cada 100 € facturados sin IVA, cuántos quedan disponibles */
+  keptPer100: number | null
 }
 
 export function summarize(data: AppData, r: Range, today: ISODate): Summary {
@@ -167,6 +171,8 @@ export function summarize(data: AppData, r: Range, today: ISODate): Summary {
     movementCount: movs.length,
     availablePerHour: minutes > 0 ? round2(available / hours) : null,
     marginPerHour: minutes > 0 ? round2(operatingMargin / hours) : null,
+    billedPerHour: minutes > 0 ? round2(incomeBase / hours) : null,
+    keptPer100: incomeBase > 0 ? Math.round((available / incomeBase) * 100) : null,
   }
 }
 

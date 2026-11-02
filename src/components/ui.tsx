@@ -12,10 +12,10 @@ export { cx }
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger'
 const VARIANTS: Record<Variant, string> = {
-  primary: 'bg-brand-600 text-white hover:bg-brand-700 shadow-sm',
-  secondary: 'bg-white text-ink border border-line hover:bg-canvas',
+  primary: 'bg-ink text-white hover:bg-ink-soft',
+  secondary: 'bg-white text-ink border border-line-strong/70 hover:border-ink/40',
   ghost: 'text-ink-2 hover:bg-black/5',
-  danger: 'bg-red-700 text-white hover:bg-red-800',
+  danger: 'bg-expense-700 text-white hover:bg-expense',
 }
 
 export function Button({
@@ -26,8 +26,8 @@ export function Button({
       type="button"
       {...rest}
       className={cx(
-        'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors disabled:opacity-50',
-        size === 'sm' ? 'h-8 px-3 text-sm' : 'h-10 px-4 text-sm',
+        'inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-[background-color,border-color,transform] active:scale-[0.98] disabled:opacity-50',
+        size === 'sm' ? 'h-8 px-3 text-sm' : 'h-11 px-4 text-[15px]',
         VARIANTS[variant],
         className,
       )}
@@ -53,7 +53,7 @@ export function IconButton({ label, children, className, ...rest }: ButtonHTMLAt
 
 export function Card({ className, children, as: Tag = 'section', ...rest }: { className?: string; children: ReactNode; as?: 'section' | 'div' | 'article'; 'aria-labelledby'?: string }) {
   return (
-    <Tag {...rest} className={cx('rounded-2xl border border-line bg-white p-4 sm:p-5', className)}>
+    <Tag {...rest} className={cx('rounded-xl border border-line bg-white p-4 sm:p-6', className)}>
       {children}
     </Tag>
   )
@@ -61,8 +61,8 @@ export function Card({ className, children, as: Tag = 'section', ...rest }: { cl
 
 export function CardTitle({ id, children, aside }: { id?: string; children: ReactNode; aside?: ReactNode }) {
   return (
-    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-      <h2 id={id} className="text-base font-semibold text-ink">{children}</h2>
+    <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+      <h2 id={id} className="text-lg font-semibold text-ink">{children}</h2>
       {aside}
     </div>
   )
@@ -72,8 +72,8 @@ export function PageHeader({ title, subtitle, actions }: { title: string; subtit
   return (
     <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div className="min-w-0">
-        <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-[1.7rem]">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm text-ink-2">{subtitle}</p>}
+        <h1 className="text-[1.9rem] leading-tight font-semibold text-ink sm:text-[2.3rem]">{title}</h1>
+        {subtitle && <p className="mt-1.5 text-[15px] text-ink-2">{subtitle}</p>}
       </div>
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
     </header>
@@ -83,10 +83,10 @@ export function PageHeader({ title, subtitle, actions }: { title: string; subtit
 export function Badge({ tone = 'neutral', children }: { tone?: 'neutral' | 'income' | 'expense' | 'warn' | 'ok'; children: ReactNode }) {
   const tones = {
     neutral: 'bg-canvas text-ink-2 border-line',
-    income: 'bg-brand-50 text-brand-700 border-brand-100',
-    expense: 'bg-orange-50 text-orange-800 border-orange-200',
+    income: 'bg-income-50 text-income-700 border-income/20',
+    expense: 'bg-expense-50 text-expense-700 border-expense/20',
     warn: 'bg-amber-50 text-amber-900 border-amber-200',
-    ok: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+    ok: 'bg-brand-50 text-brand-700 border-brand-100',
   }
   return <span className={cx('inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium whitespace-nowrap', tones[tone])}>{children}</span>
 }
@@ -94,7 +94,7 @@ export function Badge({ tone = 'neutral', children }: { tone?: 'neutral' | 'inco
 export function Help({ summary = '¿Cómo se calcula?', children }: { summary?: string; children: ReactNode }) {
   return (
     <details className="group mt-3 rounded-lg bg-canvas px-3 py-2 text-sm text-ink-2">
-      <summary className="flex items-center gap-1.5 font-medium text-brand-700 marker:content-none">
+      <summary className="flex items-center gap-1.5 font-medium text-ink marker:content-none">
         <Info className="size-4" aria-hidden />
         {summary}
       </summary>
@@ -123,7 +123,7 @@ export function Field({ label, error, hint, children, id }: { label: string; err
       {children}
       {hint && !error && <p id={`${id}-hint`} className="mt-1 text-xs text-ink-3">{hint}</p>}
       {error && (
-        <p id={`${id}-error`} className="mt-1 flex items-center gap-1 text-xs font-medium text-red-700">
+        <p id={`${id}-error`} className="mt-1 flex items-center gap-1 text-xs font-medium text-expense-700">
           <CircleAlert className="size-3.5 shrink-0" aria-hidden />
           {error}
         </p>
@@ -134,9 +134,9 @@ export function Field({ label, error, hint, children, id }: { label: string; err
 
 export const inputCls = (error?: string) =>
   cx(
-    'h-10 w-full min-w-0 rounded-lg border bg-white px-3 text-sm text-ink placeholder:text-ink-3',
-    'focus:border-brand-600 focus:ring-2 focus:ring-brand-100 focus:outline-none',
-    error ? 'border-red-600' : 'border-line',
+    'h-11 w-full min-w-0 rounded-lg border bg-white px-3 text-[15px] text-ink placeholder:text-ink-3',
+    'focus:border-income focus:ring-2 focus:ring-income/15 focus:outline-none',
+    error ? 'border-expense-700' : 'border-line-strong/70',
   )
 
 export const describedBy = (id: string, error?: string, hint?: string) =>
@@ -227,7 +227,7 @@ export function PeriodSelector() {
   const keys: PeriodKey[] = ['week', 'month', 'all']
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-      <div role="group" aria-label="Periodo" className="inline-flex rounded-xl border border-line bg-white p-1">
+      <div role="group" aria-label="Periodo" data-tour="period" className="inline-flex rounded-full border border-line-strong/60 bg-white p-1">
         {keys.map((k) => (
           <button
             key={k}
@@ -235,8 +235,8 @@ export function PeriodSelector() {
             aria-pressed={period === k}
             onClick={() => setPeriod(k)}
             className={cx(
-              'rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
-              period === k ? 'bg-brand-600 text-white shadow-sm' : 'text-ink-2 hover:bg-canvas',
+              'rounded-full px-3.5 py-1.5 text-sm font-semibold transition-colors',
+              period === k ? 'bg-ink text-white' : 'text-ink-2 hover:text-ink',
             )}
           >
             {PERIOD_LABELS[k]}
@@ -262,11 +262,11 @@ export function Toasts() {
           key={t.id}
           role={t.tone === 'error' ? 'alert' : 'status'}
           className={cx(
-            'pointer-events-auto flex w-full max-w-sm animate-fade-up items-start gap-2 rounded-xl px-4 py-3 text-sm shadow-lg',
-            t.tone === 'error' ? 'bg-red-800 text-white' : 'bg-ink text-white',
+            'pointer-events-auto flex w-full max-w-sm animate-fade-up items-start gap-2 rounded-xl px-4 py-3 text-sm shadow-xl',
+            t.tone === 'error' ? 'bg-expense-700 text-white' : 'bg-ink text-white',
           )}
         >
-          {t.tone === 'error' ? <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden /> : <CircleCheck className="mt-0.5 size-4 shrink-0 text-brand-100" aria-hidden />}
+          {t.tone === 'error' ? <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden /> : <CircleCheck className="mt-0.5 size-4 shrink-0 text-mint" aria-hidden />}
           <span className="flex-1">{t.text}</span>
           <button type="button" onClick={() => dismiss(t.id)} aria-label="Cerrar aviso" className="-m-1 rounded p-1 hover:bg-white/10">
             <X className="size-4" aria-hidden />

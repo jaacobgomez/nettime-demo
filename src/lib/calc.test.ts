@@ -66,6 +66,8 @@ describe('resumen', () => {
     expect(s.available).toBe(400)
     expect(s.taxReserve).toBe(200)
     expect(s.availablePerHour).toBeNull()
+    expect(s.billedPerHour).toBeNull()
+    expect(s.keptPer100).toBe(40)
   })
   it('no aplica IRPF a resultados negativos', () => {
     const data = empty()
@@ -145,6 +147,15 @@ describe('persistencia', () => {
     const r = load('2026-12-01')
     expect(r.status).toBe('saved')
     expect(r.data.settings.monthlyGoal).toBe(3000)
+  })
+  it('migra los datos de la v1 y renombra el perfil de ejemplo', () => {
+    const data = buildSeed(TODAY)
+    data.settings.name = 'Javier Morales'
+    mem.set(STORAGE_KEY, JSON.stringify({ version: 1, data }))
+    const r = load(TODAY)
+    expect(r.status).toBe('saved')
+    expect(r.data.settings.name).toBe('Pablo Álvarez')
+    expect(r.data.movements).toHaveLength(data.movements.length)
   })
   it('recupera de datos dañados', () => {
     mem.set(STORAGE_KEY, '{roto')

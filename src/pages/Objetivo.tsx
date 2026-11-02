@@ -80,9 +80,9 @@ export default function Objetivo() {
       <PageHeader title="Objetivo mensual y ajustes" subtitle="Marca cuánto quieres que te quede y ajusta los supuestos de la demo." />
 
       <Card aria-labelledby="meta" className="mb-4">
-        <CardTitle id="meta"><span className="inline-flex items-center gap-2"><Target className="size-5 text-brand-600" aria-hidden /> Objetivo de {monthName}</span></CardTitle>
+        <CardTitle id="meta"><span className="inline-flex items-center gap-2"><Target className="size-5 text-margin" aria-hidden /> Objetivo de {monthName}</span></CardTitle>
         <div className="num mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <span className={cx('text-3xl font-semibold tracking-tight', g.current < 0 ? 'text-red-700' : 'text-brand-700')}>{eur(g.current)}</span>
+          <span className={cx('figure text-4xl font-semibold', g.current < 0 ? 'text-expense-700' : 'text-brand-700')}>{eur(g.current)}</span>
           <span className="text-ink-2">de {eur(g.goal)} de disponible estimado</span>
         </div>
         <Progress value={g.pct} label="Progreso hacia el objetivo mensual" />

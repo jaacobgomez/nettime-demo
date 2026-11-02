@@ -94,7 +94,7 @@ export default function Movimientos() {
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm text-ink-2">
           <p className="num" aria-live="polite">
             {rows.length} {rows.length === 1 ? 'movimiento' : 'movimientos'} · {PERIOD_LABELS[period].toLowerCase()}
-            {rows.length > 0 && <> · <span className="text-brand-700">+{eur(totIn)}</span> / −{eur(totOut)}</>}
+            {rows.length > 0 && <> · <span className="font-semibold text-income-700">+{eur(totIn)}</span> / <span className="font-semibold text-expense-700">−{eur(totOut)}</span></>}
           </p>
           <div className="flex gap-2">
             {filtered && <Button size="sm" variant="ghost" onClick={clear}>Quitar filtros</Button>}
