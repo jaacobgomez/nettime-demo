@@ -1,8 +1,9 @@
-import { ArrowLeftRight, CalendarClock, ChartColumnBig, CircleHelp, LayoutDashboard, PiggyBank, RotateCcw, Target } from 'lucide-react'
+import { ArrowLeftRight, CalendarClock, ChartColumnBig, CircleHelp, LayoutDashboard, PiggyBank, Presentation, RotateCcw, Target } from 'lucide-react'
 import { useState, type CSSProperties, type ReactNode } from 'react'
 import markUrl from '../assets/brand/logo-mark.png'
 import wordUrl from '../assets/brand/logo-word.png'
 import { useStore } from '../store'
+import { usePresentation } from './Presenter'
 import { ConfirmDialog, cx } from './ui'
 
 export type Route = 'resumen' | 'movimientos' | 'jornadas' | 'impuestos' | 'rentabilidad' | 'objetivo'
@@ -31,6 +32,7 @@ export function Logo({ size = 28, wordmark = true, className }: { size?: number;
 export function Layout({ route, children }: { route: Route; children: ReactNode }) {
   const { resetDemo, notify, data, startTour } = useStore()
   const [confirm, setConfirm] = useState(false)
+  const presentation = usePresentation()
   const initials = data.settings.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase()
 
   const reset = () => {
@@ -80,6 +82,9 @@ export function Layout({ route, children }: { route: Route; children: ReactNode 
               <p className="truncate text-xs text-white/55">{data.settings.activity}</p>
             </div>
           </div>
+          <button type="button" onClick={presentation.start} className="mb-1 flex w-full items-center gap-2 rounded-lg bg-mint/15 px-2 py-2 text-sm font-semibold text-mint hover:bg-mint/25">
+            <Presentation className="size-4" aria-hidden /> Modo presentación
+          </button>
           <button type="button" data-tour="help" onClick={startTour} className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-white/70 hover:bg-white/5 hover:text-white">
             <CircleHelp className="size-4" aria-hidden /> Ver tutorial
           </button>

@@ -2,6 +2,7 @@ import { CalendarClock, Minus, Plus, Receipt } from 'lucide-react'
 import { useMemo } from 'react'
 import { Area, Bar, CartesianGrid, ComposedChart, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis, type TooltipContentProps } from 'recharts'
 import { MovementLine, Stat, Swatch } from '../components/bits'
+import { Counter } from '../components/Counter'
 import { Button, Card, CardTitle, EmptyState, Help, PageHeader, PeriodSelector, cx } from '../components/ui'
 import { PERIOD_LABELS, dailySeries, inRange, periodRange, summarize, type DailyPoint, type Summary } from '../lib/calc'
 import { cap, dateMed, dateShort, eur, eur0, hoursLabel } from '../lib/format'
@@ -36,13 +37,13 @@ function Hero({ s, label }: { s: Summary; label: string }) {
       <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr] lg:items-end">
         <div>
           <h2 id="hero-title" className="font-sans text-sm font-medium text-white/65">Disponible estimado · {label.toLowerCase()}</h2>
-          <p className={cx('figure mt-2 text-[2.9rem] leading-none font-semibold sm:text-[4rem]', neg ? 'text-[#ff9a9d]' : 'text-mint')}>{eur(s.available)}</p>
+          <p className={cx('figure mt-2 text-[2.9rem] leading-none font-semibold sm:text-[4rem]', neg ? 'text-[#ff9a9d]' : 'text-mint')}><Counter value={s.available} format={eur} /></p>
           <p className="mt-4 max-w-md text-[15px] leading-relaxed text-white/75">
             {s.keptPer100 === null
               ? 'Aún no hay ingresos en este periodo.'
               : neg
                 ? 'Los gastos y la cuota superan a lo que has facturado en este periodo.'
-                : <>De cada <strong className="text-white">100 €</strong> que facturas, te quedan <strong className="figure text-mint">{s.keptPer100} €</strong>.</>}
+                : <>De cada <strong className="text-white">100 €</strong> que facturas, te quedan <strong className="figure text-mint"><Counter value={s.keptPer100} format={(n) => `${Math.round(n)} €`} /></strong>.</>}
           </p>
         </div>
 
@@ -54,14 +55,14 @@ function Hero({ s, label }: { s: Summary; label: string }) {
               <div>
                 <div className="flex items-baseline justify-between gap-3">
                   <dt className="flex items-center gap-2 text-sm text-white/70"><Swatch tone="income" /> Facturas por hora</dt>
-                  <dd className="figure text-xl font-semibold">{eur(billed)}</dd>
+                  <dd className="figure text-xl font-semibold"><Counter value={billed} format={eur} /></dd>
                 </div>
                 <div className="mt-1.5 h-2 rounded-full bg-white/10"><div className="h-full w-full rounded-full bg-income" /></div>
               </div>
               <div>
                 <div className="flex items-baseline justify-between gap-3">
                   <dt className="flex items-center gap-2 text-sm text-white/70"><Swatch tone="margin" /> Te quedan por hora</dt>
-                  <dd className={cx('figure text-[1.9rem] leading-none font-semibold', kept < 0 ? 'text-[#ff9a9d]' : 'text-mint')}>{eur(kept)}</dd>
+                  <dd className={cx('figure text-[1.9rem] leading-none font-semibold', kept < 0 ? 'text-[#ff9a9d]' : 'text-mint')}><Counter value={kept} format={eur} /></dd>
                 </div>
                 <div className="mt-1.5 h-2 rounded-full bg-white/10">
                   <div className="h-full rounded-full bg-mint transition-[width] duration-700" style={{ width: `${Math.max(0, Math.min(100, (kept / scale) * 100))}%` }} />
@@ -190,9 +191,9 @@ export default function Resumen() {
         <Hero s={s} label={PERIOD_LABELS[period]} />
 
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <Stat label="Ingresos sin IVA" tone="income" value={eur(s.incomeBase)} sub={`+ ${eur(s.vatCollected)} de IVA cobrado`} />
-          <Stat label="Gastos" tone="expense" value={eur(s.expenses)} sub="Lo que has pagado" />
-          <Stat label="Margen operativo" tone="margin" value={eur(s.operatingMargin)} sub="Ingresos sin IVA − gastos" />
+          <Stat label="Ingresos sin IVA" tone="income" value={<Counter value={s.incomeBase} format={eur} />} sub={`+ ${eur(s.vatCollected)} de IVA cobrado`} />
+          <Stat label="Gastos" tone="expense" value={<Counter value={s.expenses} format={eur} />} sub="Lo que has pagado" />
+          <Stat label="Margen operativo" tone="margin" value={<Counter value={s.operatingMargin} format={eur} />} sub="Ingresos sin IVA − gastos" />
           <Stat label="Horas trabajadas" value={s.hours > 0 ? hoursLabel(s.hours) : <span className="text-lg text-ink-3">Sin horas registradas</span>} sub={`${s.shiftCount} ${s.shiftCount === 1 ? 'jornada' : 'jornadas'}`} />
         </div>
 

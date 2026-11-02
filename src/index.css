@@ -93,3 +93,9 @@
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* Modo presentación: resalta la zona de la que se habla */
+.present-glow {
+  box-shadow: 0 0 0 3px var(--color-mint), 0 0 0 10px rgb(126 226 173 / 0.28);
+  transition: box-shadow 300ms ease-out;
+}

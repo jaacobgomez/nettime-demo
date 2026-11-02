@@ -55,7 +55,7 @@ export default function Rentabilidad() {
         <Card><EmptyState icon={<Lightbulb className="size-5" aria-hidden />} title="Historial insuficiente">Registra jornadas y asocia sus ingresos para comparar días y horarios.</EmptyState></Card>
       ) : (
         <>
-          <Card aria-labelledby="hallazgos" className="grid-paper mb-4 !border-ink !bg-ink text-white">
+          <Card aria-labelledby="hallazgos" data-tour="insights" className="grid-paper mb-4 !border-ink !bg-ink text-white">
             <CardTitle id="hallazgos"><span className="inline-flex items-center gap-2"><Lightbulb className="size-5 text-mint" aria-hidden /> <span className="text-white">Lo que dicen tus registros</span></span></CardTitle>
             {p.insights.length === 0 ? (
               <p className="text-sm text-white/70">Historial insuficiente: hacen falta al menos {MIN_OBS} jornadas por grupo para destacar una conclusión.</p>

@@ -12,6 +12,12 @@ npm run dev        # http://localhost:5173
 Versión para entregar o colgar: `npm run build` genera `dist/` (rutas relativas: sirve en cualquier hosting estático, p. ej. Netlify o GitHub Pages).
 Probarla compilada: `npm run preview`. Pruebas del cálculo: `npm test`.
 
+## Modo presentación
+
+Botón «Modo presentación» (menú lateral o Objetivo y ajustes), o abre `#/presentar`.
+7 pasos: → / Av Pág / espacio avanzan, ← / Re Pág retroceden, Esc sale. Funciona con un mando de diapositivas.
+Durante la presentación no se guarda nada; al salir se recuperan los datos anteriores.
+
 ## Estructura
 
 - `src/lib/calc.ts` · único módulo de cálculo (todas las pantallas leen de aquí).

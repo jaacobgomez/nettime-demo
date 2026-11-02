@@ -1,6 +1,7 @@
-import { CircleCheck, Clock, RotateCcw, Target } from 'lucide-react'
+import { CircleCheck, Clock, Presentation, RotateCcw, Target } from 'lucide-react'
 import { useId, useMemo, useState, type FormEvent } from 'react'
 import { Progress } from '../components/bits'
+import { usePresentation } from '../components/Presenter'
 import { Button, Card, CardTitle, ConfirmDialog, Field, PageHeader, cx, describedBy, inputCls } from '../components/ui'
 import { goalProgress, periodRange, round2, summarize } from '../lib/calc'
 import { parseISO } from '../lib/dates'
@@ -71,6 +72,7 @@ function SettingsForm() {
 export default function Objetivo() {
   const { data, today, resetDemo, notify } = useStore()
   const [confirm, setConfirm] = useState(false)
+  const presentation = usePresentation()
   const month = useMemo(() => summarize(data, periodRange('month', today, data), today), [data, today])
   const g = goalProgress(month, data.settings.monthlyGoal)
   const monthName = parseISO(today).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
@@ -127,7 +129,11 @@ export default function Objetivo() {
       <Card className="mt-4" aria-labelledby="datos">
         <CardTitle id="datos">Datos de la demo</CardTitle>
         <p className="text-sm text-ink-2">Todo se guarda solo en este navegador. Restablecer recupera los movimientos, jornadas y ajustes de ejemplo.</p>
-        <Button className="mt-3" onClick={() => setConfirm(true)}><RotateCcw className="size-4" aria-hidden /> Restablecer demo</Button>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button variant="primary" onClick={presentation.start}><Presentation className="size-4" aria-hidden /> Modo presentación</Button>
+          <Button onClick={() => setConfirm(true)}><RotateCcw className="size-4" aria-hidden /> Restablecer demo</Button>
+        </div>
+        <p className="mt-3 text-xs text-ink-3">El modo presentación recorre la demo en 7 pasos con las flechas o un mando de diapositivas. Al salir (Esc), tus datos vuelven a estar como antes.</p>
       </Card>
 
       <ConfirmDialog

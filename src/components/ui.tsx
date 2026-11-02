@@ -51,7 +51,7 @@ export function IconButton({ label, children, className, ...rest }: ButtonHTMLAt
 
 // ───────────── Superficies ─────────────
 
-export function Card({ className, children, as: Tag = 'section', ...rest }: { className?: string; children: ReactNode; as?: 'section' | 'div' | 'article'; 'aria-labelledby'?: string }) {
+export function Card({ className, children, as: Tag = 'section', ...rest }: { className?: string; children: ReactNode; as?: 'section' | 'div' | 'article'; 'aria-labelledby'?: string; 'data-tour'?: string }) {
   return (
     <Tag {...rest} className={cx('rounded-xl border border-line bg-white p-4 sm:p-6', className)}>
       {children}
@@ -254,9 +254,15 @@ export function PeriodSelector() {
 // ───────────── Avisos ─────────────
 
 export function Toasts() {
-  const { toasts, dismiss } = useStore()
+  const { toasts, dismiss, presenting } = useStore()
   return (
-    <div aria-live="polite" className="pointer-events-none fixed inset-x-3 bottom-20 z-50 flex flex-col items-center gap-2 lg:bottom-6 lg:left-auto lg:right-6 lg:items-end">
+    <div
+      aria-live="polite"
+      className={cx(
+        'pointer-events-none fixed inset-x-3 z-50 flex flex-col items-center gap-2 lg:left-auto lg:right-6 lg:items-end',
+        presenting ? 'top-4' : 'bottom-20 lg:bottom-6',
+      )}
+    >
       {toasts.map((t) => (
         <div
           key={t.id}

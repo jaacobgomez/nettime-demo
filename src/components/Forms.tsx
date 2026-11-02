@@ -1,5 +1,5 @@
 import { Moon } from 'lucide-react'
-import { useId, useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react'
 import { crossesMidnight, effectiveMinutes, round2, validateShiftTimes } from '../lib/calc'
 import { addDays, isValidISO, isValidTime, type ISODate } from '../lib/dates'
 import { dateMed, eur, hoursLabel, parseAmount } from '../lib/format'
@@ -44,6 +44,39 @@ function MovementForm({ req }: { req: Extract<FormRequest, { type: 'movement' }>
   const [shiftId, setShiftId] = useState<string>(editing?.shiftId ?? req.shiftId ?? '')
   const [errors, setErrors] = useState<Record<string, string | undefined>>({})
 
+  // Modo presentación: escribe el formulario en directo y guarda al terminar
+  const auto = req.autoplay
+  const finished = useRef(false)
+  const finish = () => {
+    if (!auto || finished.current) return
+    finished.current = true
+    saveMovement(
+      isInc
+        ? { id: auto.id, kind: 'income', date, concept: auto.concept, source: auto.source ?? INCOME_SOURCES[0], base: auto.amount, vatRate: 10, shiftId: auto.shiftId ?? null }
+        : { id: auto.id, kind: 'expense', date, concept: auto.concept, category: auto.category ?? EXPENSE_CATEGORIES[0], amount: auto.amount, shiftId: auto.shiftId ?? null },
+    )
+    notify(isInc ? 'Ingreso añadido.' : 'Gasto añadido.')
+    closeForm()
+    req.onDone?.()
+  }
+  const finishRef = useRef(finish)
+  finishRef.current = finish
+  useEffect(() => {
+    if (!auto) return
+    const timers: number[] = []
+    let t = 500
+    const at = (ms: number, fn: () => void) => timers.push(window.setTimeout(fn, ms))
+    if (auto.source) setSource(auto.source)
+    if (auto.category) setCategory(auto.category)
+    for (let k = 1; k <= auto.concept.length; k++) at((t += 40), () => setConcept(auto.concept.slice(0, k)))
+    const amt = auto.amount.toFixed(2).replace('.', ',')
+    t += 250
+    for (let k = 1; k <= amt.length; k++) at((t += 85), () => setAmount(amt.slice(0, k)))
+    at((t += 900), () => finishRef.current())
+    return () => timers.forEach(clearTimeout)
+  }, [auto])
+  const close = () => (auto ? finish() : closeForm())
+
   // Jornadas compatibles: mismo día, o el día anterior si cruzó medianoche
   const shifts = useMemo(
     () => data.shifts.filter((s) => s.date === date || (s.date === addDays(date, -1) && crossesMidnight(s))),
@@ -83,12 +116,12 @@ function MovementForm({ req }: { req: Extract<FormRequest, { type: 'movement' }>
   return (
     <Dialog
       open
-      onClose={closeForm}
+      onClose={close}
       title={title}
       footer={
         <>
-          <Button onClick={closeForm}>Cancelar</Button>
-          <Button variant="primary" type="submit" form={f('form')}>{editing ? 'Guardar cambios' : title}</Button>
+          <Button onClick={close} disabled={!!auto}>Cancelar</Button>
+          <Button variant="primary" type="submit" form={f('form')} disabled={!!auto}>{editing ? 'Guardar cambios' : title}</Button>
         </>
       }
     >
@@ -163,6 +196,35 @@ function ShiftForm({ req }: { req: Extract<FormRequest, { type: 'shift' }> }) {
   )
   const [errors, setErrors] = useState<Record<string, string | undefined>>({})
 
+  // Modo presentación: rellena la jornada, marca sus movimientos y guarda
+  const auto = req.autoplay
+  const finished = useRef(false)
+  const finish = () => {
+    if (!auto || finished.current) return
+    finished.current = true
+    saveShift({ id: auto.id, date: auto.date, start: auto.start, end: auto.end, breakMin: auto.breakMin, activity: auto.activity }, auto.movementIds)
+    notify('Jornada registrada. El cálculo por hora ya está actualizado.')
+    closeForm()
+    req.onDone?.()
+  }
+  const finishRef = useRef(finish)
+  finishRef.current = finish
+  useEffect(() => {
+    if (!auto) return
+    const timers: number[] = []
+    let t = 500
+    const at = (ms: number, fn: () => void) => timers.push(window.setTimeout(fn, ms))
+    setDate(auto.date)
+    setActivity(auto.activity)
+    at((t += 350), () => setStart(auto.start))
+    at((t += 450), () => setEnd(auto.end))
+    at((t += 450), () => setBreakRaw(String(auto.breakMin)))
+    auto.movementIds.forEach((id) => at((t += 500), () => setSelected((sel) => new Set(sel).add(id))))
+    at((t += 1000), () => finishRef.current())
+    return () => timers.forEach(clearTimeout)
+  }, [auto])
+  const close = () => (auto ? finish() : closeForm())
+
   const breakMin = /^\d+$/.test(breakRaw.trim()) ? Number(breakRaw) : NaN
   const timesOk = isValidTime(start) && isValidTime(end)
   const overnight = timesOk && start !== end && crossesMidnight({ start, end })
@@ -217,12 +279,12 @@ function ShiftForm({ req }: { req: Extract<FormRequest, { type: 'shift' }> }) {
     <Dialog
       open
       size="lg"
-      onClose={closeForm}
+      onClose={close}
       title={editing ? 'Editar jornada' : 'Registrar jornada'}
       footer={
         <>
-          <Button onClick={closeForm}>Cancelar</Button>
-          <Button variant="primary" type="submit" form={f('form')}>{editing ? 'Guardar cambios' : 'Registrar jornada'}</Button>
+          <Button onClick={close} disabled={!!auto}>Cancelar</Button>
+          <Button variant="primary" type="submit" form={f('form')} disabled={!!auto}>{editing ? 'Guardar cambios' : 'Registrar jornada'}</Button>
         </>
       }
     >

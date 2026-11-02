@@ -95,7 +95,7 @@ export default function Impuestos() {
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <Card aria-labelledby="hucha">
+        <Card aria-labelledby="hucha" data-tour="hucha">
           <CardTitle id="hucha"><span className="inline-flex items-center gap-2"><PiggyBank className="size-5 text-reserve" aria-hidden /> Hucha · todo el historial</span></CardTitle>
           <dl className="num mb-4 grid grid-cols-3 gap-2 text-sm">
             <div><dt className="text-ink-3">Calculado</dt><dd className="text-lg font-semibold">{eur(all.taxReserve)}</dd></div>

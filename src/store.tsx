@@ -6,9 +6,13 @@ import type { AppData, Movement, PeriodKey, Settings, Shift } from './lib/types'
 
 export type Toast = { id: number; text: string; tone: 'success' | 'error' | 'info' }
 
+/** Rellenado automático del modo presentación: escribe solo y guarda al terminar. */
+export type MovementAutoplay = { id: string; concept: string; amount: number; source?: string; category?: string; shiftId?: string | null }
+export type ShiftAutoplay = { id: string; date: ISODate; start: string; end: string; breakMin: number; activity: string; movementIds: string[] }
+
 export type FormRequest =
-  | { type: 'movement'; kind: 'income' | 'expense'; movement?: Movement; date?: ISODate; shiftId?: string }
-  | { type: 'shift'; shift?: Shift }
+  | { type: 'movement'; kind: 'income' | 'expense'; movement?: Movement; date?: ISODate; shiftId?: string; autoplay?: MovementAutoplay; onDone?: () => void }
+  | { type: 'shift'; shift?: Shift; autoplay?: ShiftAutoplay; onDone?: () => void }
 
 type Draft<T> = T extends unknown ? Omit<T, 'id'> & { id?: string } : never
 
@@ -32,6 +36,11 @@ type Store = {
   form: FormRequest | null
   openForm: (f: FormRequest) => void
   closeForm: () => void
+  /** Modo presentación: los cambios no se guardan y al salir se recupera lo anterior */
+  presenting: boolean
+  startPresentation: () => void
+  exitPresentation: () => void
+  replaceData: (d: AppData) => void
 }
 
 const TOUR_KEY = 'nettime-tutorial-visto'
@@ -52,6 +61,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       return false
     }
   })
+  const [presenting, setPresenting] = useState(false)
+  const snapshot = useRef<{ data: AppData; period: PeriodKey } | null>(null)
   const toastId = useRef(0)
   const saveFailed = useRef(false)
 
@@ -70,10 +81,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [initial.status, notify])
 
   useEffect(() => {
+    if (presenting) return
     const ok = save(data)
     if (!ok && !saveFailed.current) notify('No se pueden guardar los cambios en este navegador.', 'error')
     saveFailed.current = !ok
-  }, [data, notify])
+  }, [data, notify, presenting])
 
   // Otra pestaña ha cambiado los datos
   useEffect(() => {
@@ -86,7 +98,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const saveMovement: Store['saveMovement'] = useCallback((m) => {
     setData((d) => {
-      if (m.id) return { ...d, movements: d.movements.map((x) => (x.id === m.id ? ({ ...m, id: m.id } as Movement) : x)) }
+      if (m.id && d.movements.some((x) => x.id === m.id)) {
+        return { ...d, movements: d.movements.map((x) => (x.id === m.id ? ({ ...m, id: m.id } as Movement) : x)) }
+      }
+      if (m.id) return { ...d, movements: [{ ...m, id: m.id } as Movement, ...d.movements] }
       return { ...d, movements: [{ ...m, id: newId('m') } as Movement, ...d.movements] }
     })
   }, [])
@@ -99,7 +114,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setData((d) => {
       const id = s.id ?? newId('j')
       const shift: Shift = { ...s, id }
-      const shifts = s.id ? d.shifts.map((x) => (x.id === id ? shift : x)) : [shift, ...d.shifts]
+      const exists = d.shifts.some((x) => x.id === id)
+      const shifts = exists ? d.shifts.map((x) => (x.id === id ? shift : x)) : [shift, ...d.shifts]
       const chosen = new Set(movementIds)
       // Un movimiento solo puede estar en una jornada: se reasigna, nunca se duplica.
       const movements = d.movements.map((m) => {
@@ -142,9 +158,28 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const startPresentation = useCallback(() => {
+    if (presenting) return
+    snapshot.current = { data, period }
+    setForm(null)
+    setTourOpen(false)
+    setPresenting(true)
+  }, [data, period, presenting])
+  const exitPresentation = useCallback(() => {
+    const snap = snapshot.current
+    setForm(null)
+    setPresenting(false)
+    if (snap) {
+      setData(snap.data)
+      setPeriod(snap.period)
+    }
+    snapshot.current = null
+  }, [])
+
   const value: Store = {
     data, today, period, setPeriod, saveMovement, deleteMovement, saveShift, deleteShift, updateSettings, resetDemo,
     toasts, notify, dismiss, tourOpen, startTour, endTour, form, openForm: setForm, closeForm: () => setForm(null),
+    presenting, startPresentation, exitPresentation, replaceData: setData,
   }
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
