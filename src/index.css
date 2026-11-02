@@ -1,0 +1,48 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  --color-canvas: #f4f6f5;
+  --color-ink: #14201d;
+  --color-ink-2: #4a5754;
+  --color-ink-3: #637170;
+  --color-line: #e2e7e5;
+
+  --color-brand-50: #ecfdf8;
+  --color-brand-100: #d1f5ea;
+  --color-brand-500: #0f9488;
+  --color-brand-600: #0f766e;
+  --color-brand-700: #115e59;
+  --color-brand-900: #0b3b37;
+
+  /* Series de datos (validadas para daltonismo) */
+  --color-income: #0f9488;
+  --color-expense: #dd6a30;
+  --color-reserve: #6d5bd0;
+  --color-quota: #8a9693;
+
+  --animate-fade-up: fade-up 180ms ease-out;
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+}
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; }
+  body { @apply bg-canvas text-ink antialiased; }
+  :focus-visible {
+    outline: 2px solid var(--color-brand-600);
+    outline-offset: 2px;
+  }
+  dialog::backdrop { background: rgb(15 23 21 / 0.45); }
+  dialog[open] { animation: fade-up 160ms ease-out; }
+  button:not(:disabled), summary, select { cursor: pointer; }
+}
+
+.num { font-variant-numeric: tabular-nums; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
