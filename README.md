@@ -14,7 +14,7 @@ Probarla compilada: `npm run preview`. Pruebas del cálculo: `npm test`.
 
 ## Modo presentación
 
-Botón «Modo presentación» (menú lateral o Objetivo y ajustes), o abre `#/presentar`.
+Solo para el equipo: abre `…/nettime-demo/#/presentar` una vez en el portátil de la exposición. A partir de ahí, ese navegador muestra el botón «Modo presentación» (menú lateral y Objetivo y ajustes); el resto del público no lo ve.
 7 pasos: → / Av Pág / espacio avanzan, ← / Re Pág retroceden, Esc sale. Funciona con un mando de diapositivas.
 Durante la presentación no se guarda nada; al salir se recuperan los datos anteriores.
 

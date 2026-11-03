@@ -14,13 +14,13 @@ export function QuickActions() {
   const { openForm } = useStore()
   return (
     <div data-tour="actions" className="flex flex-wrap gap-2">
-      <Button variant="primary" onClick={() => openForm({ type: 'movement', kind: 'income' })}>
+      <Button variant="primary" data-tour="add-income" onClick={() => openForm({ type: 'movement', kind: 'income' })}>
         <Plus className="size-4" aria-hidden /> Añadir ingreso
       </Button>
-      <Button onClick={() => openForm({ type: 'movement', kind: 'expense' })}>
+      <Button data-tour="add-expense" onClick={() => openForm({ type: 'movement', kind: 'expense' })}>
         <Minus className="size-4" aria-hidden /> Añadir gasto
       </Button>
-      <Button onClick={() => openForm({ type: 'shift' })}>
+      <Button data-tour="add-shift" onClick={() => openForm({ type: 'shift' })}>
         <CalendarClock className="size-4" aria-hidden /> Registrar jornada
       </Button>
     </div>

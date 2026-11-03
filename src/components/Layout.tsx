@@ -82,9 +82,12 @@ export function Layout({ route, children }: { route: Route; children: ReactNode 
               <p className="truncate text-xs text-white/55">{data.settings.activity}</p>
             </div>
           </div>
-          <button type="button" onClick={presentation.start} className="mb-1 flex w-full items-center gap-2 rounded-lg bg-mint/15 px-2 py-2 text-sm font-semibold text-mint hover:bg-mint/25">
-            <Presentation className="size-4" aria-hidden /> Modo presentación
-          </button>
+          {/* Solo para el equipo: aparece tras entrar una vez por #/presentar */}
+          {presentation.available && (
+            <button type="button" onClick={presentation.start} className="mb-1 flex w-full items-center gap-2 rounded-lg bg-mint/15 px-2 py-2 text-sm font-semibold text-mint hover:bg-mint/25">
+              <Presentation className="size-4" aria-hidden /> Modo presentación
+            </button>
+          )}
           <button type="button" data-tour="help" onClick={startTour} className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-white/70 hover:bg-white/5 hover:text-white">
             <CircleHelp className="size-4" aria-hidden /> Ver tutorial
           </button>

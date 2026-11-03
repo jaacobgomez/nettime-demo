@@ -7,6 +7,22 @@ import { EXPENSE_CATEGORIES, INCOME_SOURCES, SHIFT_ACTIVITIES, VAT_RATES, type M
 import { useStore, type FormRequest } from '../store'
 import { Button, Dialog, Field, cx, describedBy, inputCls } from './ui'
 
+/** Modo presentación: ilumina el campo que se está rellenando. */
+function spotField(id: string | null) {
+  document.querySelectorAll('.auto-field').forEach((el) => el.classList.remove('auto-field'))
+  if (id) document.getElementById(id)?.classList.add('auto-field')
+}
+
+/** Modo presentación: explica qué se está rellenando. */
+function AutoNote({ text, className }: { text: string; className?: string }) {
+  if (!text) return null
+  return (
+    <p key={text} aria-live="polite" className={cx('animate-fade-up rounded-lg bg-mint/20 px-3 py-2 text-sm font-medium text-ink', className)}>
+      {text}
+    </p>
+  )
+}
+
 const toInput = (n: number) => String(n).replace('.', ',')
 
 function validDate(date: string, today: ISODate): string | undefined {
@@ -46,10 +62,12 @@ function MovementForm({ req }: { req: Extract<FormRequest, { type: 'movement' }>
 
   // Modo presentación: escribe el formulario en directo y guarda al terminar
   const auto = req.autoplay
+  const [note, setNote] = useState('')
   const finished = useRef(false)
   const finish = () => {
     if (!auto || finished.current) return
     finished.current = true
+    spotField(null)
     saveMovement(
       isInc
         ? { id: auto.id, kind: 'income', date, concept: auto.concept, source: auto.source ?? INCOME_SOURCES[0], base: auto.amount, vatRate: 10, shiftId: auto.shiftId ?? null }
@@ -64,16 +82,28 @@ function MovementForm({ req }: { req: Extract<FormRequest, { type: 'movement' }>
   useEffect(() => {
     if (!auto) return
     const timers: number[] = []
-    let t = 500
+    let t = 700
     const at = (ms: number, fn: () => void) => timers.push(window.setTimeout(fn, ms))
+    const say = (id: string | null, text: string) => at(t, () => { spotField(id); setNote(text) })
     if (auto.source) setSource(auto.source)
     if (auto.category) setCategory(auto.category)
-    for (let k = 1; k <= auto.concept.length; k++) at((t += 40), () => setConcept(auto.concept.slice(0, k)))
+    say(f(isInc ? 'source' : 'category'), isInc ? 'Fuente: de dónde viene el dinero.' : 'Categoría: así sabe en qué se le va el dinero.')
+    t += 1600
+    say(f('concept'), 'Concepto: una descripción corta para reconocerlo luego.')
+    t += 600
+    for (let k = 1; k <= auto.concept.length; k++) at((t += 70), () => setConcept(auto.concept.slice(0, k)))
     const amt = auto.amount.toFixed(2).replace('.', ',')
-    t += 250
-    for (let k = 1; k <= amt.length; k++) at((t += 85), () => setAmount(amt.slice(0, k)))
+    t += 900
+    say(f('amount'), isInc ? 'Importe sin IVA: el IVA se calcula aparte, porque no es suyo.' : 'Importe pagado, tal cual sale en el tique.')
+    t += 600
+    for (let k = 1; k <= amt.length; k++) at((t += 170), () => setAmount(amt.slice(0, k)))
+    t += isInc ? 2600 : 1600
+    say(null, 'Guardando…')
     at((t += 900), () => finishRef.current())
-    return () => timers.forEach(clearTimeout)
+    return () => {
+      timers.forEach(clearTimeout)
+      spotField(null)
+    }
   }, [auto])
   const close = () => (auto ? finish() : closeForm())
 
@@ -126,6 +156,7 @@ function MovementForm({ req }: { req: Extract<FormRequest, { type: 'movement' }>
       }
     >
       <form id={f('form')} onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-2">
+        {auto && <AutoNote text={note} className="sm:col-span-2" />}
         <Field id={f('date')} label="Fecha" error={errors.date}>
           <input id={f('date')} type="date" max={today} value={date} onChange={(e) => setDate(e.target.value)} className={inputCls(errors.date)} aria-invalid={!!errors.date} aria-describedby={describedBy(f('date'), errors.date)} />
         </Field>
@@ -198,10 +229,12 @@ function ShiftForm({ req }: { req: Extract<FormRequest, { type: 'shift' }> }) {
 
   // Modo presentación: rellena la jornada, marca sus movimientos y guarda
   const auto = req.autoplay
+  const [note, setNote] = useState('')
   const finished = useRef(false)
   const finish = () => {
     if (!auto || finished.current) return
     finished.current = true
+    spotField(null)
     saveShift({ id: auto.id, date: auto.date, start: auto.start, end: auto.end, breakMin: auto.breakMin, activity: auto.activity }, auto.movementIds)
     notify('Jornada registrada. El cálculo por hora ya está actualizado.')
     closeForm()
@@ -212,16 +245,31 @@ function ShiftForm({ req }: { req: Extract<FormRequest, { type: 'shift' }> }) {
   useEffect(() => {
     if (!auto) return
     const timers: number[] = []
-    let t = 500
+    let t = 700
     const at = (ms: number, fn: () => void) => timers.push(window.setTimeout(fn, ms))
+    const say = (id: string | null, text: string) => at(t, () => { spotField(id); setNote(text) })
     setDate(auto.date)
     setActivity(auto.activity)
-    at((t += 350), () => setStart(auto.start))
-    at((t += 450), () => setEnd(auto.end))
-    at((t += 450), () => setBreakRaw(String(auto.breakMin)))
-    auto.movementIds.forEach((id) => at((t += 500), () => setSelected((sel) => new Set(sel).add(id))))
-    at((t += 1000), () => finishRef.current())
-    return () => timers.forEach(clearTimeout)
+    say(f('start'), 'Hora de inicio del turno.')
+    at((t += 700), () => setStart(auto.start))
+    t += 1000
+    say(f('end'), 'Hora de fin.')
+    at((t += 700), () => setEnd(auto.end))
+    t += 1000
+    say(f('breakMin'), 'Descanso: no cuenta como hora trabajada.')
+    at((t += 700), () => setBreakRaw(String(auto.breakMin)))
+    t += 1300
+    auto.movementIds.forEach((id, n) => {
+      say(f(`mov-${id}`), n === 0 ? 'Marca lo que cobró y gastó en este turno.' : 'Y el repostaje, que también fue en este turno.')
+      at((t += 800), () => setSelected((sel) => new Set(sel).add(id)))
+      t += 1000
+    })
+    say(null, 'Guardando…')
+    at((t += 900), () => finishRef.current())
+    return () => {
+      timers.forEach(clearTimeout)
+      spotField(null)
+    }
   }, [auto])
   const close = () => (auto ? finish() : closeForm())
 
@@ -289,6 +337,7 @@ function ShiftForm({ req }: { req: Extract<FormRequest, { type: 'shift' }> }) {
       }
     >
       <form id={f('form')} onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-6">
+        {auto && <AutoNote text={note} className="sm:col-span-6" />}
         <div className="sm:col-span-3">
           <Field id={f('date')} label="Fecha de inicio" error={errors.date}>
             <input id={f('date')} type="date" max={today} value={date} onChange={(e) => setDate(e.target.value)} className={inputCls(errors.date)} aria-invalid={!!errors.date} aria-describedby={describedBy(f('date'), errors.date)} />
@@ -339,7 +388,7 @@ function ShiftForm({ req }: { req: Extract<FormRequest, { type: 'shift' }> }) {
                 const other = m.shiftId && m.shiftId !== editing?.id ? shiftById.get(m.shiftId) : undefined
                 return (
                   <li key={m.id}>
-                    <label className="flex cursor-pointer items-start gap-3 px-3 py-2 text-sm hover:bg-canvas">
+                    <label id={f(`mov-${m.id}`)} className="flex cursor-pointer items-start gap-3 px-3 py-2 text-sm hover:bg-canvas">
                       <input type="checkbox" checked={selected.has(m.id)} onChange={() => toggle(m.id)} className="mt-0.5 size-4 accent-ink" />
                       <span className="min-w-0 flex-1">
                         <span className="num block truncate">{movLabel(m)}</span>

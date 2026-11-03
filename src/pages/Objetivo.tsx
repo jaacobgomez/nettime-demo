@@ -130,10 +130,10 @@ export default function Objetivo() {
         <CardTitle id="datos">Datos de la demo</CardTitle>
         <p className="text-sm text-ink-2">Todo se guarda solo en este navegador. Restablecer recupera los movimientos, jornadas y ajustes de ejemplo.</p>
         <div className="mt-3 flex flex-wrap gap-2">
-          <Button variant="primary" onClick={presentation.start}><Presentation className="size-4" aria-hidden /> Modo presentación</Button>
+          {presentation.available && <Button variant="primary" onClick={presentation.start}><Presentation className="size-4" aria-hidden /> Modo presentación</Button>}
           <Button onClick={() => setConfirm(true)}><RotateCcw className="size-4" aria-hidden /> Restablecer demo</Button>
         </div>
-        <p className="mt-3 text-xs text-ink-3">El modo presentación recorre la demo en 7 pasos con las flechas o un mando de diapositivas. Al salir (Esc), tus datos vuelven a estar como antes.</p>
+        {presentation.available && <p className="mt-3 text-xs text-ink-3">El modo presentación recorre la demo en 7 pasos con las flechas o un mando de diapositivas. Al salir (Esc), tus datos vuelven a estar como antes.</p>}
       </Card>
 
       <ConfirmDialog
