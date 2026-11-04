@@ -225,13 +225,13 @@ export default function Landing() {
 
       <main>
         {/* HERO */}
-        <section className="grid-paper relative isolate min-h-[100svh] overflow-hidden bg-ink pt-28 pb-20 text-white sm:pt-36">
+        <section className="grid-paper relative isolate flex min-h-[100svh] flex-col justify-center overflow-hidden bg-ink pt-28 pb-24 text-white">
           <div aria-hidden className="parallax-slow pointer-events-none absolute -top-40 -right-40 -z-10 size-[38rem] rounded-full bg-mint/15 blur-3xl" />
           <div aria-hidden className="parallax-fast pointer-events-none absolute -bottom-48 -left-32 -z-10 size-[30rem] rounded-full bg-income/20 blur-3xl" />
           <div aria-hidden className="float-y pointer-events-none absolute top-1/3 left-[8%] -z-10 hidden size-3 rounded-full bg-mint/70 lg:block" />
           <div aria-hidden className="float-y-delay pointer-events-none absolute right-[12%] bottom-1/4 -z-10 hidden size-2 rounded-full bg-white/50 lg:block" />
 
-          <div className="mx-auto grid max-w-6xl items-center gap-14 px-5 lg:grid-cols-[1.15fr_1fr]">
+          <div className="mx-auto grid w-full max-w-6xl items-center gap-16 px-5 lg:grid-cols-[1.15fr_1fr]">
             <div className="reveal">
               <Eyebrow light>Taxi · VTC · Transporte · Oficios</Eyebrow>
               <h1 className="mt-5 text-[2.9rem] leading-[1.02] font-semibold sm:text-6xl lg:text-7xl">
@@ -253,7 +253,11 @@ export default function Landing() {
 
             {/* Tarjeta: cree que gana vs le queda */}
             <div className="reveal relative" style={d(150)}>
-              <div className="tilt rounded-3xl bg-white/[0.06] p-6 ring-1 ring-white/15 backdrop-blur-sm sm:p-8">
+              <div aria-hidden className="absolute inset-0 hidden translate-x-5 translate-y-5 sm:block rounded-3xl bg-white/[0.03] ring-1 ring-white/10" />
+              <div aria-hidden className="absolute inset-0 hidden translate-x-10 translate-y-10 sm:block rounded-3xl bg-white/[0.02] ring-1 ring-white/5" />
+              <span aria-hidden className="float-y absolute -top-6 -left-5 z-10 hidden items-center gap-2 rounded-full bg-expense px-3.5 py-2 text-sm font-semibold text-white shadow-xl sm:flex"><Fuel className="size-4" /> −25 € gastos</span>
+              <span aria-hidden className="float-y-delay absolute -right-4 -bottom-5 z-10 hidden items-center gap-2 rounded-full bg-reserve px-3.5 py-2 text-sm font-semibold text-white shadow-xl sm:flex"><Landmark className="size-4" /> −10 € IRPF</span>
+              <div className="tilt relative rounded-3xl bg-white/[0.06] p-6 ring-1 ring-white/15 backdrop-blur-sm sm:p-8">
                 <p className="text-sm text-white/60">Pablo, taxista · ejemplo</p>
                 <dl className="mt-6 space-y-6">
                   <div>
@@ -269,7 +273,7 @@ export default function Landing() {
             </div>
           </div>
 
-          <button type="button" onClick={() => goTo('problema')} aria-label="Bajar al problema" className="scroll-cue absolute bottom-6 left-1/2 -translate-x-1/2 text-white/50 hover:text-white">
+          <button type="button" onClick={() => goTo('problema')} aria-label="Bajar al problema" className="scroll-cue absolute bottom-6 hidden sm:block left-1/2 -translate-x-1/2 text-white/50 hover:text-white">
             <span className="block h-9 w-5 rounded-full ring-1 ring-current"><span className="mx-auto mt-2 block h-2 w-0.5 rounded-full bg-current" /></span>
           </button>
         </section>
