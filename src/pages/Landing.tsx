@@ -1,14 +1,14 @@
-import { ArrowRight, CalendarClock, Check, Clapperboard, Fuel, Landmark, PiggyBank, Play, ShieldCheck, Smartphone, Timer, X } from 'lucide-react'
-import { useEffect, useMemo, useRef, type ReactNode } from 'react'
+import { ArrowRight, Briefcase, CalendarClock, Clapperboard, Coins, Fuel, Gauge, Landmark, Moon, NotebookPen, PiggyBank, Play, Receipt, ShieldCheck, Timer, Zap, type LucideIcon } from 'lucide-react'
+import { useEffect, useMemo, useRef, type CSSProperties, type ReactNode } from 'react'
 import { Logo } from '../components/Layout'
-import { periodRange, summarize } from '../lib/calc'
+import { periodRange, profitability, summarize } from '../lib/calc'
 import { todayISO } from '../lib/dates'
 import { eur } from '../lib/format'
 import { buildSeed } from '../lib/seed'
 
 /**
  * Vídeo conceptual (1 min). Pega aquí el enlace cuando esté grabado:
- * - YouTube (normal o "oculto"): https://youtu.be/XXXX o https://www.youtube.com/watch?v=XXXX
+ * - YouTube (normal u "oculto"): https://youtu.be/XXXX o https://www.youtube.com/watch?v=XXXX
  * - o un archivo propio en public/, p. ej. 'video-nettime.mp4'
  * Vacío = se muestra el aviso de "próximamente".
  */
@@ -21,7 +21,7 @@ function youtubeId(url: string): string | null {
   return m ? m[1] : null
 }
 
-/** Aparición suave al entrar en pantalla (respeta prefers-reduced-motion vía CSS). */
+/** Marca .is-in al entrar en pantalla; las animaciones cuelgan de esa clase (y respetan prefers-reduced-motion). */
 function useReveal() {
   const root = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -46,6 +46,7 @@ function useReveal() {
 }
 
 const goTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+const d = (ms: number) => ({ transitionDelay: `${ms}ms` }) as CSSProperties
 
 function Cta({ children = 'Pruébalo gratis', dark = false }: { children?: ReactNode; dark?: boolean }) {
   return (
@@ -66,6 +67,81 @@ function Eyebrow({ children, light = false }: { children: ReactNode; light?: boo
   return <p className={'text-xs font-semibold tracking-[0.18em] uppercase ' + (light ? 'text-mint' : 'text-brand-600')}>{children}</p>
 }
 
+/* ── Comparativa ─────────────────────────────────────────────── */
+
+const NEEDS: { icon: LucideIcon; label: string }[] = [
+  { icon: Gauge, label: 'Neto por hora' },
+  { icon: Zap, label: 'En segundos' },
+  { icon: Landmark, label: 'Lo de Hacienda' },
+  { icon: CalendarClock, label: 'Mejores turnos' },
+  { icon: Coins, label: 'Sin cuotas' },
+]
+
+const TOOLS: { name: string; icon: LucideIcon | null; has: boolean[]; star?: boolean }[] = [
+  { name: 'Libreta o Excel', icon: NotebookPen, has: [false, false, false, false, true] },
+  { name: 'App de facturas', icon: Receipt, has: [false, true, true, false, false] },
+  { name: 'Gestoría', icon: Briefcase, has: [false, false, true, false, false] },
+  { name: 'NetTime', icon: null, has: [true, true, true, true, true], star: true },
+]
+
+function Ring({ value, total, dark }: { value: number; total: number; dark?: boolean }) {
+  const p = (value / total) * 100
+  return (
+    <div className="relative size-20 sm:size-24">
+      <svg viewBox="0 0 36 36" className="size-full -rotate-90" aria-hidden>
+        <circle cx="18" cy="18" r="15.5" fill="none" strokeWidth="3.2" className={dark ? 'stroke-white/10' : 'stroke-line'} />
+        <circle cx="18" cy="18" r="15.5" fill="none" strokeWidth="3.2" strokeLinecap="round" pathLength={100}
+          className={'ring-fg ' + (dark ? 'stroke-mint' : value > 1 ? 'stroke-ink-3' : 'stroke-expense')} style={{ '--p': p } as CSSProperties} />
+      </svg>
+      <span className={'figure absolute inset-0 flex items-center justify-center text-2xl font-semibold ' + (dark ? 'text-mint' : '')}>
+        {value}<span className={'text-sm ' + (dark ? 'text-white/50' : 'text-ink-3')}>/{total}</span>
+      </span>
+    </div>
+  )
+}
+
+function Compare() {
+  return (
+    <>
+      <ul className="reveal mx-auto flex max-w-3xl flex-wrap justify-center gap-2" aria-label="Lo que necesita un autónomo">
+        {NEEDS.map(({ icon: Icon, label }) => (
+          <li key={label} className="flex items-center gap-2 rounded-full bg-canvas px-3.5 py-2 text-sm font-medium ring-1 ring-line">
+            <Icon className="size-4 text-brand-600" aria-hidden /> {label}
+          </li>
+        ))}
+      </ul>
+      <div className="mt-10 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {TOOLS.map(({ name, icon: Icon, has, star }, i) => {
+          const n = has.filter(Boolean).length
+          return (
+            <article key={name} style={d(i * 110)}
+              className={'reveal flex flex-col items-center rounded-3xl px-3 py-6 text-center transition sm:p-6 ' +
+                (star ? 'grid-paper bg-ink text-white shadow-2xl shadow-brand-700/25 ring-2 ring-mint lg:-translate-y-3 lg:scale-105' : 'bg-white ring-1 ring-line')}>
+              <div className={'flex h-10 items-center justify-center ' + (star ? '' : 'text-ink-3')}>
+                {Icon ? <Icon className="size-7" aria-hidden /> : <Logo size={26} />}
+              </div>
+              <h3 className={'mt-3 text-[15px] font-semibold ' + (star ? 'sr-only' : '')}>{name}</h3>
+              <div className="mt-4"><Ring value={n} total={has.length} dark={star} /></div>
+              <ul className="mt-5 flex gap-1 sm:gap-1.5" aria-label={`${name}: cubre ${n} de ${has.length}`}>
+                {NEEDS.map(({ icon: NIcon, label }, j) => (
+                  <li key={label} title={`${label}: ${has[j] ? 'sí' : 'no'}`}
+                    className={'flex size-[22px] items-center justify-center rounded-md sm:size-8 sm:rounded-lg ' +
+                      (has[j] ? (star ? 'bg-mint text-ink' : 'bg-brand-50 text-brand-700') : (star ? 'bg-white/5 text-white/20' : 'bg-canvas text-line-strong'))}>
+                    <NIcon className="size-3 sm:size-4" aria-hidden />
+                    <span className="sr-only">{label}: {has[j] ? 'sí' : 'no'}</span>
+                  </li>
+                ))}
+              </ul>
+            </article>
+          )
+        })}
+      </div>
+    </>
+  )
+}
+
+/* ── Vídeo ───────────────────────────────────────────────────── */
+
 function Video() {
   const yt = VIDEO_URL ? youtubeId(VIDEO_URL) : null
   if (yt) {
@@ -85,26 +161,45 @@ function Video() {
   }
   return (
     <div className="grid-paper relative flex aspect-video w-full flex-col items-center justify-center gap-4 bg-ink p-6 text-center text-white">
-      <span className="flex size-16 items-center justify-center rounded-full bg-white/10 ring-1 ring-white/20">
-        <Clapperboard className="size-7 text-mint" aria-hidden />
+      <span className="pulse-ring flex size-20 items-center justify-center rounded-full bg-white/10 ring-1 ring-white/20">
+        <Clapperboard className="size-8 text-mint" aria-hidden />
       </span>
-      <p className="font-display text-xl font-semibold sm:text-2xl">La historia de Pablo, en 1 minuto</p>
-      <p className="max-w-sm text-sm text-white/65">Estamos terminando el vídeo. Mientras tanto, prueba la demo con una jornada tuya.</p>
+      <p className="font-display text-xl font-semibold sm:text-2xl">Próximamente</p>
     </div>
   )
 }
 
+/* ── Página ──────────────────────────────────────────────────── */
+
 export default function Landing() {
   const root = useReveal()
 
-  // Cifras del cliente de ejemplo (las mismas que verás en la demo)
+  // Cifras del cliente de ejemplo: las mismas que verás en la demo
   const ex = useMemo(() => {
     const today = todayISO()
     const seed = buildSeed(today)
     const s = summarize(seed, periodRange('all', today, seed), today)
     const billed = s.billedPerHour ?? 0
     const kept = s.availablePerHour ?? 0
-    return { billed, kept, pct: billed > 0 ? Math.max(8, Math.min(100, (kept / billed) * 100)) : 0, per100: s.keptPer100 }
+    const base = s.incomeBase || 1
+    const per = (n: number) => Math.round((n / base) * 100)
+    const expenses = per(s.expenses)
+    const quota = per(s.quota)
+    const irpf = per(s.irpfReserve)
+    const days = profitability(seed).byWeekday.map((g) => ({ label: g.label.slice(0, 1), full: g.label, v: g.marginPerHour ?? 0 }))
+    const maxDay = Math.max(1, ...days.map((x) => x.v))
+    return {
+      billed, kept,
+      pct: billed > 0 ? Math.max(8, Math.min(100, (kept / billed) * 100)) : 0,
+      steps: [
+        { label: 'Factura', value: 100, from: 0, tone: 'bg-income', icon: Timer },
+        { label: 'Gastos', value: -expenses, from: 100 - expenses, tone: 'bg-expense', icon: Fuel },
+        { label: 'Cuota', value: -quota, from: 100 - expenses - quota, tone: 'bg-quota', icon: Receipt },
+        { label: 'IRPF', value: -irpf, from: 100 - expenses - quota - irpf, tone: 'bg-reserve', icon: Landmark },
+        { label: 'Le queda', value: 100 - expenses - quota - irpf, from: 0, tone: 'bg-mint', icon: PiggyBank },
+      ],
+      days: days.map((x) => ({ ...x, h: Math.max(6, (x.v / maxDay) * 100), best: x.v === maxDay })),
+    }
   }, [])
 
   useEffect(() => {
@@ -138,41 +233,38 @@ export default function Landing() {
 
           <div className="mx-auto grid max-w-6xl items-center gap-14 px-5 lg:grid-cols-[1.15fr_1fr]">
             <div className="reveal">
-              <Eyebrow light>Para autónomos del taxi, VTC, transporte y oficios</Eyebrow>
+              <Eyebrow light>Taxi · VTC · Transporte · Oficios</Eyebrow>
               <h1 className="mt-5 text-[2.9rem] leading-[1.02] font-semibold sm:text-6xl lg:text-7xl">
                 Lo que ganas,<br /><span className="text-mint">de verdad.</span>
               </h1>
-              <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/75">
-                Apunta tu jornada en segundos y descubre cuánto te queda limpio por cada hora, después de gastos, cuota e impuestos.
-              </p>
+              <p className="mt-6 max-w-md text-xl leading-relaxed text-white/75">Tu neto real por hora, en segundos.</p>
               <div className="mt-9 flex flex-wrap items-center gap-3">
                 <Cta />
                 <button type="button" onClick={() => goTo('video')} className="inline-flex h-12 items-center gap-2 rounded-full px-5 text-[15px] font-medium text-white/85 ring-1 ring-white/20 transition hover:bg-white/5 hover:text-white">
-                  <Play className="size-4" aria-hidden /> Ver la historia de Pablo
+                  <Play className="size-4" aria-hidden /> Ver la historia
                 </button>
               </div>
-              <p className="mt-6 flex items-center gap-2 text-sm text-white/55"><ShieldCheck className="size-4" aria-hidden /> Gratis, sin registro. Tus datos se quedan en tu móvil.</p>
+              <ul className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-sm text-white/55">
+                <li className="flex items-center gap-1.5"><Coins className="size-4" aria-hidden /> Gratis</li>
+                <li className="flex items-center gap-1.5"><Zap className="size-4" aria-hidden /> Sin registro</li>
+                <li className="flex items-center gap-1.5"><ShieldCheck className="size-4" aria-hidden /> Datos en tu móvil</li>
+              </ul>
             </div>
 
-            {/* Tarjeta: facturas vs te queda */}
-            <div className="reveal reveal-delay relative">
+            {/* Tarjeta: cree que gana vs le queda */}
+            <div className="reveal relative" style={d(150)}>
               <div className="tilt rounded-3xl bg-white/[0.06] p-6 ring-1 ring-white/15 backdrop-blur-sm sm:p-8">
-                <p className="text-sm text-white/60">Pablo, taxista en Madrid · ejemplo</p>
+                <p className="text-sm text-white/60">Pablo, taxista · ejemplo</p>
                 <dl className="mt-6 space-y-6">
                   <div>
-                    <div className="flex items-baseline justify-between"><dt className="text-white/70">Lo que cree que gana</dt><dd className="figure text-2xl font-semibold">{eur(ex.billed)}/h</dd></div>
-                    <div className="mt-2 h-3 rounded-full bg-white/10"><div className="bar-grow h-full w-full rounded-full bg-income" /></div>
+                    <div className="flex items-baseline justify-between"><dt className="text-white/70">Cree que gana</dt><dd className="figure text-2xl font-semibold">{eur(ex.billed)}/h</dd></div>
+                    <div className="mt-2 h-3 rounded-full bg-white/10"><div className="grow-x h-full w-full rounded-full bg-income" style={d(400)} /></div>
                   </div>
                   <div>
-                    <div className="flex items-baseline justify-between"><dt className="text-white/70">Lo que le queda de verdad</dt><dd className="figure text-4xl font-semibold text-mint">{eur(ex.kept)}/h</dd></div>
-                    <div className="mt-2 h-3 rounded-full bg-white/10"><div className="bar-grow bar-delay h-full rounded-full bg-mint" style={{ width: `${ex.pct}%` }} /></div>
+                    <div className="flex items-baseline justify-between"><dt className="text-white/70">Le queda</dt><dd className="figure text-4xl font-semibold text-mint">{eur(ex.kept)}/h</dd></div>
+                    <div className="mt-2 h-3 rounded-full bg-white/10"><div className="grow-x h-full rounded-full bg-mint" style={{ width: `${ex.pct}%`, ...d(900) }} /></div>
                   </div>
                 </dl>
-                {ex.per100 !== null && (
-                  <p className="mt-7 border-t border-white/10 pt-5 text-[15px] text-white/75">
-                    De cada <strong className="text-white">100 €</strong> que factura, le quedan <strong className="figure text-mint">{Math.round(ex.per100)} €</strong>.
-                  </p>
-                )}
               </div>
             </div>
           </div>
@@ -184,78 +276,64 @@ export default function Landing() {
 
         {/* PROBLEMA */}
         <section id="problema" className="relative scroll-mt-20 py-24 sm:py-32">
-          <div className="mx-auto grid max-w-6xl gap-12 px-5 lg:grid-cols-[1fr_1.1fr]">
-            <div className="lg:sticky lg:top-32 lg:self-start">
-              <div className="reveal">
-                <Eyebrow>El problema</Eyebrow>
-                <h2 className="mt-4 text-4xl leading-tight font-semibold sm:text-5xl">Facturar no es ganar.</h2>
-                <p className="mt-5 max-w-md text-lg leading-relaxed text-ink-2">
-                  Si trabajas por tu cuenta, el dinero entra cada día pero los gastos, la cuota e Hacienda llegan después. Al final del mes no sabes cuánto has ganado de verdad por cada hora al volante.
-                </p>
+          <div className="mx-auto max-w-6xl px-5">
+            <div className="reveal text-center">
+              <Eyebrow>El problema</Eyebrow>
+              <h2 className="mt-4 text-4xl leading-tight font-semibold sm:text-6xl">Facturar no es ganar.</h2>
+            </div>
+
+            {/* Tres momentos */}
+            <ol className="mx-auto mt-14 grid max-w-4xl grid-cols-3 gap-3 sm:gap-6">
+              {[
+                { icon: Moon, t: '23:00', s: '180 € cobrados', tone: 'bg-income-50 text-income-700' },
+                { icon: Fuel, t: 'Mañana', s: 'Gastos y cuota', tone: 'bg-expense-50 text-expense-700' },
+                { icon: Landmark, t: 'Trimestre', s: 'Hacienda', tone: 'bg-reserve-50 text-reserve' },
+              ].map(({ icon: Icon, t, s, tone }, i) => (
+                <li key={t} className="reveal relative flex flex-col items-center text-center" style={d(i * 140)}>
+                  {i < 2 && <span aria-hidden className="grow-x absolute top-9 left-[calc(50%+2.75rem)] hidden h-0.5 w-[calc(100%-5.5rem+1.5rem)] bg-line-strong sm:block" style={d(300 + i * 140)} />}
+                  <span className={'flex size-[4.5rem] items-center justify-center rounded-2xl shadow-sm ' + tone}><Icon className="size-8" aria-hidden /></span>
+                  <p className="mt-4 font-display text-lg font-semibold sm:text-xl">{t}</p>
+                  <p className="text-sm text-ink-2 sm:text-base">{s}</p>
+                </li>
+              ))}
+            </ol>
+
+            {/* Cascada: de 100 € a lo que queda */}
+            <div className="reveal mx-auto mt-16 max-w-4xl rounded-3xl bg-white p-6 shadow-sm ring-1 ring-line sm:p-10">
+              <p className="text-center font-display text-lg font-semibold sm:text-xl">De cada <span className="text-income">100 €</span> que factura Pablo…</p>
+              <div className="mt-8 space-y-3">
+                {ex.steps.map(({ label, value, from, tone, icon: Icon }, i) => {
+                  const w = Math.abs(value)
+                  const last = i === ex.steps.length - 1
+                  return (
+                    <div key={label} className={'grid grid-cols-[6.5rem_1fr_3.5rem] items-center gap-3 sm:grid-cols-[8rem_1fr_4.5rem] ' + (last ? 'mt-5 border-t border-line pt-5' : '')}>
+                      <span className={'flex items-center gap-2 text-sm font-medium sm:text-[15px] ' + (last ? 'font-semibold text-brand-700' : 'text-ink-2')}>
+                        <Icon className="size-4 shrink-0" aria-hidden /> {label}
+                      </span>
+                      <div className="relative h-7 rounded-md bg-canvas sm:h-8">
+                        <div className={'grow-x absolute inset-y-0 rounded-md ' + tone} style={{ left: `${from}%`, width: `${w}%`, ...d(250 + i * 220) }} />
+                      </div>
+                      <span className={'figure text-right font-semibold ' + (last ? 'text-2xl text-brand-600' : 'text-ink-2')}>
+                        {value < 0 ? '−' : ''}{w} €
+                      </span>
+                    </div>
+                  )
+                })}
               </div>
             </div>
 
-            <ol className="space-y-5">
-              {[
-                { icon: Timer, t: '23:00 · Cierra el turno', d: '«Hoy he hecho 180 €. Buen día, ¿no?» Pablo cuenta lo que ha cobrado, no lo que le queda.' },
-                { icon: Fuel, t: 'Al día siguiente · Los gastos', d: 'Gasolina, seguro, taller, la cuota de autónomos… Cada uno por su lado y ninguno cuadra con el turno de ayer.' },
-                { icon: Landmark, t: 'Fin de trimestre · Hacienda', d: 'Llega el IVA y el IRPF de golpe. El dinero que parecía suyo no lo era, y el susto sí.' },
-              ].map(({ icon: Icon, t, d }, i) => (
-                <li key={t} className="reveal flex gap-5 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-line sm:p-7" style={{ transitionDelay: `${i * 90}ms` }}>
-                  <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-expense-50 text-expense-700"><Icon className="size-6" aria-hidden /></span>
-                  <div>
-                    <h3 className="text-lg font-semibold">{t}</h3>
-                    <p className="mt-1.5 leading-relaxed text-ink-2">{d}</p>
-                  </div>
-                </li>
-              ))}
-              <li className="reveal rounded-2xl bg-ink p-6 text-white sm:p-7">
-                <p className="font-display text-2xl leading-snug font-semibold">«Trabajo 10 horas al día y no sé si me compensa.»</p>
-                <p className="mt-2 text-sm text-white/60">La pregunta que NetTime responde con tus propias cifras.</p>
-              </li>
-            </ol>
+            <p className="reveal mt-12 text-center font-display text-2xl font-semibold text-ink-2 sm:text-3xl">«¿Me compensa?»</p>
           </div>
         </section>
 
         {/* QUÉ FALLA EN LO QUE YA EXISTE */}
         <section className="bg-white py-24 sm:py-28">
-          <div className="mx-auto max-w-5xl px-5">
-            <div className="reveal max-w-2xl">
+          <div className="mx-auto max-w-6xl px-5">
+            <div className="reveal mx-auto mb-10 max-w-2xl text-center">
               <Eyebrow>Lo que ya existe</Eyebrow>
-              <h2 className="mt-4 text-3xl leading-tight font-semibold sm:text-4xl">Las herramientas de siempre te dicen cuánto facturas. No cuánto ganas por hora.</h2>
+              <h2 className="mt-4 text-3xl leading-tight font-semibold sm:text-5xl">Cuentan lo que facturas.<br /><span className="text-brand-600">No lo que ganas.</span></h2>
             </div>
-            <div className="reveal mt-10 overflow-x-auto rounded-2xl ring-1 ring-line">
-              <table className="w-full text-left text-sm sm:text-[15px]">
-                <thead className="bg-canvas text-xs text-ink-2 sm:text-sm">
-                  <tr>
-                    <th scope="col" className="px-3 py-4 font-medium sm:px-5"><span className="sr-only">Qué ofrece</span></th>
-                    <th scope="col" className="px-2 py-4 text-center font-medium sm:px-4">Libreta o Excel</th>
-                    <th scope="col" className="px-2 py-4 text-center font-medium sm:px-4">App de facturas</th>
-                    <th scope="col" className="px-2 py-4 text-center font-medium sm:px-4">Gestoría</th>
-                    <th scope="col" className="bg-ink px-2 py-4 text-center font-semibold text-mint sm:px-4">NetTime</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-line">
-                  {[
-                    { q: 'Neto real por hora trabajada', v: [false, false, false] },
-                    { q: 'Apuntar una jornada en segundos', v: [false, true, false] },
-                    { q: 'Calcula lo que apartar para Hacienda', v: [false, true, true] },
-                    { q: 'Qué días y turnos te rinden más', v: [false, false, false] },
-                    { q: 'Sin cuotas mensuales', v: [true, false, false] },
-                  ].map(({ q, v }) => (
-                    <tr key={q}>
-                      <th scope="row" className="px-3 py-4 font-medium sm:px-5">{q}</th>
-                      {v.map((ok, i) => (
-                        <td key={i} className="px-2 py-4 text-center sm:px-4">
-                          {ok ? <Check className="mx-auto size-5 text-brand-600" aria-label="Sí" /> : <X className="mx-auto size-5 text-expense" aria-label="No" />}
-                        </td>
-                      ))}
-                      <td className="bg-brand-50 px-2 py-4 text-center sm:px-4"><Check className="mx-auto size-5 text-brand-700" aria-label="Sí" /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Compare />
           </div>
         </section>
 
@@ -264,23 +342,58 @@ export default function Landing() {
           <div aria-hidden className="parallax-slow pointer-events-none absolute top-10 -left-40 -z-10 size-[32rem] rounded-full bg-brand-100/70 blur-3xl" />
           <div aria-hidden className="parallax-fast pointer-events-none absolute -right-40 bottom-0 -z-10 size-[28rem] rounded-full bg-reserve-50 blur-3xl" />
           <div className="mx-auto max-w-6xl px-5">
-            <div className="reveal max-w-2xl">
+            <div className="reveal mx-auto max-w-2xl text-center">
               <Eyebrow>Cómo te ayuda</Eyebrow>
-              <h2 className="mt-4 text-4xl leading-tight font-semibold sm:text-5xl">Apuntas tu jornada. NetTime te dice cuánto te ha quedado.</h2>
+              <h2 className="mt-4 text-4xl leading-tight font-semibold sm:text-5xl">Apuntas. Ves. Decides.</h2>
             </div>
 
             <div className="mt-14 grid gap-5 md:grid-cols-3">
-              {[
-                { icon: Smartphone, tone: 'bg-brand-50 text-brand-700', t: 'Tu neto por hora, al momento', d: 'Lo que cobras, lo que gastas y tus horas. En menos de un minuto sabes cuánto te queda limpio por cada hora.' },
-                { icon: PiggyBank, tone: 'bg-reserve-50 text-reserve', t: 'Hacienda ya no te pilla', d: 'NetTime aparta cada día lo que tocará pagar de IVA e IRPF. Cuando llega el trimestre, el dinero ya está ahí.' },
-                { icon: CalendarClock, tone: 'bg-income-50 text-income-700', t: 'Trabaja cuando más rinde', d: 'Compara días y turnos con tus propias cifras y descubre qué horas te compensan de verdad.' },
-              ].map(({ icon: Icon, tone, t, d }, i) => (
-                <article key={t} className="reveal group rounded-3xl bg-white/80 p-7 shadow-sm ring-1 ring-line backdrop-blur transition hover:-translate-y-1 hover:shadow-xl" style={{ transitionDelay: `${i * 90}ms` }}>
-                  <span className={'flex size-12 items-center justify-center rounded-2xl transition group-hover:scale-110 ' + tone}><Icon className="size-6" aria-hidden /></span>
-                  <h3 className="mt-6 text-xl font-semibold">{t}</h3>
-                  <p className="mt-2 leading-relaxed text-ink-2">{d}</p>
-                </article>
-              ))}
+              {/* 1 · Neto por hora */}
+              <article className="reveal group flex flex-col overflow-hidden rounded-3xl bg-white/85 shadow-sm ring-1 ring-line backdrop-blur transition hover:-translate-y-1 hover:shadow-xl">
+                <div className="grid-paper flex h-56 items-center justify-center bg-ink">
+                  <div className="w-36 rounded-[1.6rem] bg-ink-soft p-2 ring-1 ring-white/15 shadow-2xl transition group-hover:-rotate-2">
+                    <div className="rounded-[1.2rem] bg-canvas px-3 pt-4 pb-5 text-center">
+                      <Logo size={14} wordmark={false} className="text-ink" />
+                      <p className="mt-2 text-[10px] text-ink-3">Te quedan</p>
+                      <p className="figure text-2xl font-semibold text-brand-600">{eur(ex.kept)}</p>
+                      <p className="text-[10px] text-ink-3">por hora</p>
+                      <div className="mt-3 h-1.5 rounded-full bg-line"><div className="grow-x h-full rounded-full bg-mint" style={{ width: `${ex.pct}%`, ...d(400) }} /></div>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-6"><h3 className="text-xl font-semibold">Tu neto por hora</h3><p className="mt-1 text-ink-2">Al cerrar el turno.</p></div>
+              </article>
+
+              {/* 2 · Hucha */}
+              <article className="reveal group flex flex-col overflow-hidden rounded-3xl bg-white/85 shadow-sm ring-1 ring-line backdrop-blur transition hover:-translate-y-1 hover:shadow-xl" style={d(110)}>
+                <div className="flex h-56 items-end justify-center gap-5 bg-reserve-50 pb-8">
+                  {[{ l: 'IVA', h: 70 }, { l: 'IRPF', h: 45 }].map(({ l, h }, i) => (
+                    <div key={l} className="flex flex-col items-center gap-2">
+                      <div className="relative h-32 w-16 overflow-hidden rounded-b-2xl rounded-t-lg border-2 border-reserve/40 bg-white">
+                        <div className="grow-y absolute inset-x-0 bottom-0 bg-reserve/80" style={{ height: `${h}%`, ...d(400 + i * 250) }} />
+                      </div>
+                      <span className="text-xs font-semibold text-reserve">{l}</span>
+                    </div>
+                  ))}
+                  <PiggyBank className="mb-6 size-14 text-reserve transition group-hover:-translate-y-1" aria-hidden />
+                </div>
+                <div className="p-6"><h3 className="text-xl font-semibold">Hacienda, apartada</h3><p className="mt-1 text-ink-2">Cada día, sin sustos.</p></div>
+              </article>
+
+              {/* 3 · Mejores turnos */}
+              <article className="reveal group flex flex-col overflow-hidden rounded-3xl bg-white/85 shadow-sm ring-1 ring-line backdrop-blur transition hover:-translate-y-1 hover:shadow-xl" style={d(220)}>
+                <div className="flex h-56 items-end justify-center gap-2.5 bg-income-50 px-6 pb-7">
+                  {ex.days.map(({ label, full, h, best }, i) => (
+                    <div key={full} className="flex h-full flex-1 flex-col items-center justify-end gap-2" title={full}>
+                      <div className="flex w-full flex-1 items-end">
+                        <div className={'grow-y w-full rounded-t-md ' + (best ? 'bg-brand-500' : 'bg-income/35')} style={{ height: `${h}%`, ...d(300 + i * 80) }} />
+                      </div>
+                      <span className={'text-xs font-semibold ' + (best ? 'text-brand-700' : 'text-ink-3')}>{label}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="p-6"><h3 className="text-xl font-semibold">Tus mejores turnos</h3><p className="mt-1 text-ink-2">Trabaja cuando más rinde.</p></div>
+              </article>
             </div>
           </div>
         </section>
@@ -302,8 +415,9 @@ export default function Landing() {
         <section className="relative isolate overflow-hidden py-24 sm:py-32">
           <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60%_80%_at_50%_100%,var(--color-brand-100),transparent_70%)]" />
           <div className="reveal mx-auto max-w-3xl px-5 text-center">
-            <h2 className="text-4xl leading-tight font-semibold sm:text-5xl">¿Cuánto te quedó ayer por hora?</h2>
-            <p className="mx-auto mt-5 max-w-xl text-lg text-ink-2">Apunta tu última jornada y descúbrelo en menos de dos minutos. Sin registro y sin dar tu correo.</p>
+            <Timer className="mx-auto size-10 text-brand-600" aria-hidden />
+            <h2 className="mt-5 text-4xl leading-tight font-semibold sm:text-5xl">¿Cuánto te quedó ayer por hora?</h2>
+            <p className="mx-auto mt-4 text-lg text-ink-2">Apunta tu última jornada. Menos de 2 minutos.</p>
             <div className="mt-9 flex justify-center"><Cta dark>Calcular mi neto por hora</Cta></div>
           </div>
         </section>
@@ -312,7 +426,7 @@ export default function Landing() {
       <footer className="border-t border-line bg-canvas">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-5 py-10 text-sm text-ink-3 sm:flex-row sm:items-center sm:justify-between">
           <Logo size={24} className="text-ink" />
-          <p>Cifras orientativas: NetTime no sustituye a tu gestoría. Proyecto del equipo NetTime · U-TAD · 2026.</p>
+          <p>Cifras orientativas: no sustituye a tu gestoría. Equipo NetTime · U-TAD · 2026.</p>
         </div>
       </footer>
     </div>
