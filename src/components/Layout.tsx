@@ -55,7 +55,7 @@ export function Layout({ route, children }: { route: Route; children: ReactNode 
         <a href="#/resumen" className="mb-1 block px-2 text-white" aria-label="NetTime, ir al resumen">
           <Logo size={30} />
         </a>
-        <p className="mb-8 px-2 text-xs text-white/55">Deja de trabajar a ciegas.</p>
+        <p className="mb-8 px-2 text-xs text-white/55">Deja de trabajar a ciegas</p>
         <nav aria-label="Principal" data-tour="nav" className="flex flex-col gap-0.5">
           {ROUTES.map(({ id, label, icon: Icon }) => (
             <a

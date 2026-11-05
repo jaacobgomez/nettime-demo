@@ -178,11 +178,8 @@ function Story({ kept }: { kept: number }) {
             El problema
           </p>
           <p className="mt-5 text-lg leading-relaxed text-ink-2">
-            Son las 23:00 y Pablo ha cobrado <strong className="text-ink">180 €</strong>. Pero no sabe cuánto es suyo: mañana tocan
-            gasolina, seguro, taller y la cuota de autónomos, y cada trimestre llega Hacienda.
-          </p>
-          <p className="mt-4 text-lg leading-relaxed text-ink-2">
-            Trabaja más horas que nunca y sigue sin saber <strong className="text-ink">si le compensa</strong>.
+            Cobra <strong className="text-ink">180 €</strong> en diez horas, pero aún faltan gasolina, autónomos y Hacienda.
+            ¿Le <strong className="text-ink">compensa</strong>?
           </p>
         </article>
 
@@ -193,11 +190,8 @@ function Story({ kept }: { kept: number }) {
             La solución
           </p>
           <p className="mt-5 text-lg leading-relaxed text-white/80">
-            Al cerrar el turno apunta su jornada en <strong className="text-white">NetTime</strong> en unos segundos y ve lo que le queda
-            de verdad: <strong className="figure text-mint">{eur(kept)} por hora</strong>.
-          </p>
-          <p className="mt-4 text-lg leading-relaxed text-white/80">
-            Aparta lo de Hacienda cada día y sabe qué turnos le rinden. <strong className="text-white">Trabaja mejor, no más.</strong>
+            Apunta el turno en segundos y ve lo que le queda: <strong className="figure text-mint">{eur(kept)} por hora</strong>.{' '}
+            <strong className="text-white">Trabaja mejor, no más.</strong>
           </p>
         </article>
       </div>
@@ -333,7 +327,7 @@ export default function Landing() {
             <div className="reveal">
               <Eyebrow light>Taxi · VTC · Transporte · Oficios</Eyebrow>
               <h1 className="mt-5 text-[2.9rem] leading-[1.02] font-semibold sm:text-6xl lg:text-7xl">
-                Deja de trabajar<br /><span className="text-mint">a ciegas.</span>
+                Deja de trabajar<br /><span className="text-mint">a ciegas</span>
               </h1>
               <p className="mt-6 max-w-md text-xl leading-relaxed text-white/75">Tu neto real por hora, en segundos.</p>
               <div className="mt-9 flex flex-wrap items-center gap-3">

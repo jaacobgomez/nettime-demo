@@ -175,7 +175,7 @@ export function Tour() {
         {!rect && (
           <div className="grid-paper flex flex-col items-center gap-2 bg-ink px-6 pt-8 pb-6 text-white">
             <Logo size={44} />
-            <p className="text-sm text-white/70">Deja de trabajar a ciegas.</p>
+            <p className="text-sm text-white/70">Deja de trabajar a ciegas</p>
           </div>
         )}
         <div className="p-5">
