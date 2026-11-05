@@ -252,7 +252,7 @@ export default function Landing() {
             </div>
 
             {/* Tarjeta: cree que gana vs le queda */}
-            <div className="reveal relative" style={d(150)}>
+            <div className="reveal group/card relative" style={d(150)}>
               <div aria-hidden className="absolute inset-0 hidden translate-x-5 translate-y-5 sm:block rounded-3xl bg-white/[0.03] ring-1 ring-white/10" />
               <div aria-hidden className="absolute inset-0 hidden translate-x-10 translate-y-10 sm:block rounded-3xl bg-white/[0.02] ring-1 ring-white/5" />
               <div className="relative isolate z-0">
@@ -270,8 +270,8 @@ export default function Landing() {
                   </dl>
                 </div>
               </div>
-              <span aria-hidden className="float-y absolute -top-6 -left-5 z-20 hidden items-center gap-2 rounded-full bg-expense px-3.5 py-2 text-sm font-semibold text-white shadow-xl sm:flex"><Fuel className="size-4" /> −25 € gastos</span>
-              <span aria-hidden className="float-y-delay absolute -right-4 -bottom-5 z-20 hidden items-center gap-2 rounded-full bg-reserve px-3.5 py-2 text-sm font-semibold text-white shadow-xl sm:flex"><Landmark className="size-4" /> −10 € IRPF</span>
+              <span aria-hidden className="badge-pop badge-left absolute -top-6 -left-5 z-20 hidden items-center gap-2 rounded-full bg-expense px-3.5 py-2 text-sm font-semibold text-white shadow-xl sm:flex"><Fuel className="size-4" /> −25 € gastos</span>
+              <span aria-hidden className="badge-pop badge-right absolute -right-4 -bottom-5 z-20 hidden items-center gap-2 rounded-full bg-reserve px-3.5 py-2 text-sm font-semibold text-white shadow-xl sm:flex"><Landmark className="size-4" /> −10 € IRPF</span>
             </div>
           </div>
 

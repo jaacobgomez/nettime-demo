@@ -130,8 +130,22 @@ label.auto-field {
 
 .landing .float-y { animation: float-y 6s ease-in-out infinite; }
 .landing .float-y-delay { animation: float-y 7s ease-in-out 1.5s infinite; }
-.landing .float-y, .landing .float-y-delay { will-change: transform; backface-visibility: hidden; }
-@keyframes float-y { 0%, 100% { transform: translate3d(0, 0, 0); } 50% { transform: translate3d(0, -18px, 0); } }
+@keyframes float-y { 50% { transform: translateY(-18px); } }
+
+/* Etiquetas del hero: entran con rebote una vez y saludan al pasar el ratón (sin bucles: Firefox las movía a tirones) */
+.landing .badge-pop { opacity: 0; transform: scale(0.4) rotate(var(--r, 0deg)); transition: transform 350ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 350ms ease; }
+.landing .badge-left { --r: -6deg; }
+.landing .badge-right { --r: 5deg; }
+.landing .reveal.is-in .badge-pop { opacity: 1; transform: scale(1) rotate(var(--r)); animation: badge-pop 750ms cubic-bezier(0.34, 1.56, 0.64, 1) backwards; }
+.landing .reveal.is-in .badge-left { animation-delay: 1100ms; }
+.landing .reveal.is-in .badge-right { animation-delay: 1500ms; }
+@keyframes badge-pop {
+  0% { opacity: 0; transform: scale(0.4) rotate(calc(var(--r) * -2)); }
+  60% { opacity: 1; }
+  100% { opacity: 1; transform: scale(1) rotate(var(--r)); }
+}
+.landing .reveal.is-in.group\/card:hover .badge-left { transform: translate(-6px, -6px) scale(1.06) rotate(-9deg); }
+.landing .reveal.is-in.group\/card:hover .badge-right { transform: translate(6px, 6px) scale(1.06) rotate(8deg); }
 
 .landing .scroll-cue { animation: cue 2.2s ease-in-out infinite; }
 @keyframes cue { 50% { transform: translate(-50%, 6px); } }
@@ -154,4 +168,5 @@ label.auto-field {
   .landing .pulse-ring, .landing .float-y, .landing .float-y-delay, .landing .scroll-cue,
   .landing .parallax-slow, .landing .parallax-fast { animation: none; }
   .landing .tilt { transform: none; }
+  .landing .badge-pop, .landing .reveal.is-in .badge-pop { animation: none; opacity: 1; transform: none; transition: none; }
 }
