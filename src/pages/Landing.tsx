@@ -255,21 +255,23 @@ export default function Landing() {
             <div className="reveal relative" style={d(150)}>
               <div aria-hidden className="absolute inset-0 hidden translate-x-5 translate-y-5 sm:block rounded-3xl bg-white/[0.03] ring-1 ring-white/10" />
               <div aria-hidden className="absolute inset-0 hidden translate-x-10 translate-y-10 sm:block rounded-3xl bg-white/[0.02] ring-1 ring-white/5" />
-              <span aria-hidden className="float-y absolute -top-6 -left-5 z-10 hidden items-center gap-2 rounded-full bg-expense px-3.5 py-2 text-sm font-semibold text-white shadow-xl sm:flex"><Fuel className="size-4" /> −25 € gastos</span>
-              <span aria-hidden className="float-y-delay absolute -right-4 -bottom-5 z-10 hidden items-center gap-2 rounded-full bg-reserve px-3.5 py-2 text-sm font-semibold text-white shadow-xl sm:flex"><Landmark className="size-4" /> −10 € IRPF</span>
-              <div className="tilt relative rounded-3xl bg-white/[0.06] p-6 ring-1 ring-white/15 backdrop-blur-sm sm:p-8">
-                <p className="text-sm text-white/60">Pablo, taxista · ejemplo</p>
-                <dl className="mt-6 space-y-6">
-                  <div>
-                    <div className="flex items-baseline justify-between"><dt className="text-white/70">Cree que gana</dt><dd className="figure text-2xl font-semibold">{eur(ex.billed)}/h</dd></div>
-                    <div className="mt-2 h-3 rounded-full bg-white/10"><div className="grow-x h-full w-full rounded-full bg-income" style={d(400)} /></div>
-                  </div>
-                  <div>
-                    <div className="flex items-baseline justify-between"><dt className="text-white/70">Le queda</dt><dd className="figure text-4xl font-semibold text-mint">{eur(ex.kept)}/h</dd></div>
-                    <div className="mt-2 h-3 rounded-full bg-white/10"><div className="grow-x h-full rounded-full bg-mint" style={{ width: `${ex.pct}%`, ...d(900) }} /></div>
-                  </div>
-                </dl>
+              <div className="relative isolate z-0">
+                <div className="tilt relative rounded-3xl bg-white/[0.06] p-6 ring-1 ring-white/15 backdrop-blur-sm sm:p-8">
+                  <p className="text-sm text-white/60">Pablo, taxista · ejemplo</p>
+                  <dl className="mt-6 space-y-6">
+                    <div>
+                      <div className="flex items-baseline justify-between"><dt className="text-white/70">Cree que gana</dt><dd className="figure text-2xl font-semibold">{eur(ex.billed)}/h</dd></div>
+                      <div className="mt-2 h-3 rounded-full bg-white/10"><div className="grow-x h-full w-full rounded-full bg-income" style={d(400)} /></div>
+                    </div>
+                    <div>
+                      <div className="flex items-baseline justify-between"><dt className="text-white/70">Le queda</dt><dd className="figure text-4xl font-semibold text-mint">{eur(ex.kept)}/h</dd></div>
+                      <div className="mt-2 h-3 rounded-full bg-white/10"><div className="grow-x h-full rounded-full bg-mint" style={{ width: `${ex.pct}%`, ...d(900) }} /></div>
+                    </div>
+                  </dl>
+                </div>
               </div>
+              <span aria-hidden className="float-y absolute -top-6 -left-5 z-20 hidden items-center gap-2 rounded-full bg-expense px-3.5 py-2 text-sm font-semibold text-white shadow-xl sm:flex"><Fuel className="size-4" /> −25 € gastos</span>
+              <span aria-hidden className="float-y-delay absolute -right-4 -bottom-5 z-20 hidden items-center gap-2 rounded-full bg-reserve px-3.5 py-2 text-sm font-semibold text-white shadow-xl sm:flex"><Landmark className="size-4" /> −10 € IRPF</span>
             </div>
           </div>
 
