@@ -130,7 +130,8 @@ label.auto-field {
 
 .landing .float-y { animation: float-y 6s ease-in-out infinite; }
 .landing .float-y-delay { animation: float-y 7s ease-in-out 1.5s infinite; }
-@keyframes float-y { 50% { transform: translateY(-18px); } }
+.landing .float-y, .landing .float-y-delay { will-change: transform; backface-visibility: hidden; }
+@keyframes float-y { 0%, 100% { transform: translate3d(0, 0, 0); } 50% { transform: translate3d(0, -18px, 0); } }
 
 .landing .scroll-cue { animation: cue 2.2s ease-in-out infinite; }
 @keyframes cue { 50% { transform: translate(-50%, 6px); } }
