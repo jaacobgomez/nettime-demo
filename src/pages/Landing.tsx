@@ -256,7 +256,7 @@ export default function Landing() {
               <div aria-hidden className="absolute inset-0 hidden translate-x-5 translate-y-5 sm:block rounded-3xl bg-white/[0.03] ring-1 ring-white/10" />
               <div aria-hidden className="absolute inset-0 hidden translate-x-10 translate-y-10 sm:block rounded-3xl bg-white/[0.02] ring-1 ring-white/5" />
               <div className="relative isolate z-0">
-                <div className="tilt relative rounded-3xl bg-white/[0.06] p-6 ring-1 ring-white/15 backdrop-blur-sm sm:p-8">
+                <div className="tilt relative rounded-3xl bg-ink-soft p-6 ring-1 ring-white/15 sm:p-8">
                   <p className="text-sm text-white/60">Pablo, taxista · ejemplo</p>
                   <dl className="mt-6 space-y-6">
                     <div>
