@@ -13,7 +13,7 @@ const STEPS: Step[] = [
   },
   {
     target: 'hero',
-    title: 'Lo que ganas, de verdad',
+    title: 'Deja de trabajar a ciegas',
     body: 'Lo que facturas por hora no es lo que te queda. Aquí ves tu disponible después de gastos, cuota de autónomos y reserva de IRPF, y cuánto es por cada hora trabajada.',
   },
   {
@@ -175,7 +175,7 @@ export function Tour() {
         {!rect && (
           <div className="grid-paper flex flex-col items-center gap-2 bg-ink px-6 pt-8 pb-6 text-white">
             <Logo size={44} />
-            <p className="text-sm text-white/70">Lo que ganas, de verdad.</p>
+            <p className="text-sm text-white/70">Deja de trabajar a ciegas.</p>
           </div>
         )}
         <div className="p-5">

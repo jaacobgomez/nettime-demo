@@ -300,7 +300,7 @@ export default function Landing() {
   }, [])
 
   useEffect(() => {
-    document.title = 'NetTime · Lo que ganas, de verdad'
+    document.title = 'NetTime · Deja de trabajar a ciegas'
   }, [])
 
   return (
@@ -333,7 +333,7 @@ export default function Landing() {
             <div className="reveal">
               <Eyebrow light>Taxi · VTC · Transporte · Oficios</Eyebrow>
               <h1 className="mt-5 text-[2.9rem] leading-[1.02] font-semibold sm:text-6xl lg:text-7xl">
-                Lo que ganas,<br /><span className="text-mint">de verdad.</span>
+                Deja de trabajar<br /><span className="text-mint">a ciegas.</span>
               </h1>
               <p className="mt-6 max-w-md text-xl leading-relaxed text-white/75">Tu neto real por hora, en segundos.</p>
               <div className="mt-9 flex flex-wrap items-center gap-3">

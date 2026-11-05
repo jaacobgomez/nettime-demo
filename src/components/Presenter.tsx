@@ -60,7 +60,7 @@ const STEPS: Step[] = [
   { title: 'Registra su jornada', caption: 'Pulsa «Registrar jornada»: horas, descanso y los movimientos de ese turno.', after: 'Con las horas trabajadas, NetTime ya sabe cuánto le queda por cada hora.', route: 'resumen', highlight: 'hero', actions: 3, animate: 'shift' },
   { title: '¿Cuánto apartar para Hacienda?', caption: 'La hucha suma el IVA cobrado y la reserva de IRPF, y le dice cuánto le falta por apartar.', route: 'impuestos', highlight: 'hucha', actions: 3 },
   { title: '¿Cuándo le compensa trabajar?', caption: 'Compara sus propias jornadas por día y franja horaria. Sin predicciones inventadas: solo sus datos.', route: 'rentabilidad', highlight: 'insights', actions: 3 },
-  { title: 'Lo que ganas, de verdad.', caption: 'Mirad vuestro correo: tenéis la demo para usarla cuando queráis.', route: 'resumen', actions: 3, final: true },
+  { title: 'Deja de trabajar a ciegas.', caption: 'Mirad vuestro correo: tenéis la demo para usarla cuando queráis.', route: 'resumen', actions: 3, final: true },
 ]
 
 /** Botón que se "pulsa" antes de abrir cada formulario */
@@ -141,7 +141,7 @@ function FinalSlide() {
       <div className="grid w-full max-w-5xl items-center gap-10 md:grid-cols-[1.2fr_1fr]">
         <div>
           <Logo size={64} />
-          <h2 className="mt-8 text-[2.6rem] leading-[1.05] font-semibold sm:text-[4.2rem]">Lo que ganas,<br /><span className="text-mint">de verdad.</span></h2>
+          <h2 className="mt-8 text-[2.6rem] leading-[1.05] font-semibold sm:text-[4.2rem]">Deja de trabajar<br /><span className="text-mint">a ciegas.</span></h2>
           <p className="mt-6 flex items-center gap-3 text-lg text-white/80 sm:text-xl">
             <Mail className="size-6 shrink-0 text-mint" aria-hidden /> Mirad vuestro correo: tenéis la demo para probarla cuando queráis.
           </p>
