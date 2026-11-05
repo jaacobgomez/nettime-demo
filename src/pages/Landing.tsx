@@ -1,5 +1,5 @@
-import { ArrowRight, Briefcase, CalendarClock, Clapperboard, Coins, Fuel, Gauge, Info, Landmark, Moon, NotebookPen, PiggyBank, Play, Receipt, ShieldCheck, Timer, Zap, type LucideIcon } from 'lucide-react'
-import { useEffect, useMemo, useRef, type CSSProperties, type ReactNode } from 'react'
+import { ArrowRight, Briefcase, CalendarClock, CarTaxiFront, Clapperboard, Coins, Fuel, Gauge, Info, Landmark, Lightbulb, Moon, NotebookPen, PiggyBank, Play, Receipt, ShieldCheck, Timer, TriangleAlert, Zap, type LucideIcon } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { Logo } from '../components/Layout'
 import { periodRange, profitability, summarize } from '../lib/calc'
 import { todayISO } from '../lib/dates'
@@ -140,6 +140,89 @@ function Compare() {
   )
 }
 
+/* ── Historia de Pablo ────────────────────────────────────────── */
+
+function Story({ kept }: { kept: number }) {
+  return (
+    <div className="mx-auto max-w-5xl">
+      <div className="reveal flex flex-col items-center text-center">
+        <span className="mb-5 flex size-20 items-center justify-center rounded-full bg-ink text-mint shadow-xl ring-4 ring-white">
+          <CarTaxiFront className="size-9" aria-hidden />
+        </span>
+        <Eyebrow>La historia de Pablo</Eyebrow>
+        <h2 className="mt-4 text-4xl leading-tight font-semibold sm:text-5xl">Diez horas al volante.<br /><span className="text-brand-600">¿Y cuánto es suyo?</span></h2>
+        <p className="mt-4 text-ink-2">Pablo, taxista autónomo en Madrid · personaje de ejemplo</p>
+      </div>
+
+      <div className="relative mt-14 grid gap-5 md:grid-cols-2 md:gap-10">
+        <span aria-hidden className="absolute top-1/2 left-1/2 z-10 hidden size-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-brand-600 shadow-lg ring-1 ring-line md:flex">
+          <ArrowRight className="size-5" />
+        </span>
+
+        <article className="reveal rounded-3xl bg-white p-7 shadow-sm ring-1 ring-line sm:p-9">
+          <p className="flex items-center gap-2 text-sm font-semibold tracking-wide text-expense-700 uppercase">
+            <span className="flex size-9 items-center justify-center rounded-xl bg-expense-50"><TriangleAlert className="size-5" aria-hidden /></span>
+            El problema
+          </p>
+          <p className="mt-5 text-lg leading-relaxed text-ink-2">
+            Son las 23:00 y Pablo ha cobrado <strong className="text-ink">180 €</strong>. Pero no sabe cuánto es suyo: mañana tocan
+            gasolina, seguro, taller y la cuota de autónomos, y cada trimestre llega Hacienda.
+          </p>
+          <p className="mt-4 text-lg leading-relaxed text-ink-2">
+            Trabaja más horas que nunca y sigue sin saber <strong className="text-ink">si le compensa</strong>.
+          </p>
+        </article>
+
+        <article className="reveal grid-paper rounded-3xl bg-ink p-7 text-white shadow-2xl shadow-brand-700/20 ring-2 ring-mint sm:p-9" style={d(150)}>
+          <p className="flex items-center gap-2 text-sm font-semibold tracking-wide text-mint uppercase">
+            <span className="flex size-9 items-center justify-center rounded-xl bg-mint/15"><Lightbulb className="size-5" aria-hidden /></span>
+            La solución
+          </p>
+          <p className="mt-5 text-lg leading-relaxed text-white/80">
+            Al cerrar el turno apunta su jornada en <strong className="text-white">NetTime</strong> en unos segundos y ve lo que le queda
+            de verdad: <strong className="figure text-mint">{eur(kept)} por hora</strong>.
+          </p>
+          <p className="mt-4 text-lg leading-relaxed text-white/80">
+            Aparta lo de Hacienda cada día y sabe qué turnos le rinden. <strong className="text-white">Trabaja mejor, no más.</strong>
+          </p>
+        </article>
+      </div>
+    </div>
+  )
+}
+
+/* ── Equipo ──────────────────────────────────────────────────── */
+
+/**
+ * Fotos: deja cada una en public/equipo/ con el nombre de `foto` (cuadrada, ~600 px).
+ * Si falta, se ven las iniciales.
+ */
+const TEAM: { name: string; role: string; foto: string }[] = [
+  { name: 'Alejandro Castellanos', role: 'Product Owner · Diseño', foto: 'alejandro.jpg' },
+  { name: 'Jacob Gómez', role: 'Scrum Master · Front-end', foto: 'jacob.jpg' },
+  { name: 'Manuel Albizu', role: 'Full-stack', foto: 'manuel.jpg' },
+  { name: 'Marc Estellers', role: 'Full-stack', foto: 'marc.jpg' },
+  { name: 'Pablo Franco', role: 'Front-end · Pruebas', foto: 'pablo.jpg' },
+]
+
+function Member({ name, role, foto, i }: { name: string; role: string; foto: string; i: number }) {
+  const [noPhoto, setNoPhoto] = useState(false)
+  const initials = name.split(' ').map((w) => w[0]).slice(0, 2).join('')
+  return (
+    <li className="reveal group flex flex-col items-center text-center" style={d(i * 90)}>
+      <div className="relative size-32 overflow-hidden rounded-full bg-ink ring-4 ring-white shadow-lg transition group-hover:-translate-y-1 group-hover:shadow-xl sm:size-36">
+        {noPhoto ? (
+          <span className="grid-paper flex size-full items-center justify-center font-display text-3xl font-semibold text-mint">{initials}</span>
+        ) : (
+          <img src={`${import.meta.env.BASE_URL}equipo/${foto}`} alt={`Foto de ${name}`} loading="lazy" onError={() => setNoPhoto(true)} className="size-full object-cover" />
+        )}
+      </div>
+      <h3 className="mt-5 text-lg font-semibold">{name}</h3>
+      <p className="mt-1 text-sm font-medium text-brand-600">{role}</p>
+    </li>
+  )
+}
+
 /* ── Vídeo ───────────────────────────────────────────────────── */
 
 function Video() {
@@ -218,6 +301,7 @@ export default function Landing() {
             <button type="button" onClick={() => goTo('problema')} className="hidden rounded-full px-3 py-1.5 text-white/75 hover:text-white sm:block">El problema</button>
             <button type="button" onClick={() => goTo('solucion')} className="hidden rounded-full px-3 py-1.5 text-white/75 hover:text-white sm:block">Cómo te ayuda</button>
             <button type="button" onClick={() => goTo('video')} className="hidden rounded-full px-3 py-1.5 text-white/75 hover:text-white sm:block">Vídeo</button>
+            <button type="button" onClick={() => goTo('equipo')} className="hidden rounded-full px-3 py-1.5 text-white/75 hover:text-white sm:block">Equipo</button>
             <a href={APP_URL} className="ml-1 rounded-full bg-mint px-4 py-1.5 font-semibold text-ink hover:bg-[#98ebc0]">Probar</a>
           </nav>
         </div>
@@ -414,6 +498,13 @@ export default function Landing() {
           </div>
         </section>
 
+        {/* HISTORIA DE PABLO */}
+        <section id="historia" className="relative isolate scroll-mt-20 overflow-hidden bg-white py-24 sm:py-32">
+          <div aria-hidden className="parallax-slow pointer-events-none absolute -top-32 right-0 -z-10 size-[26rem] rounded-full bg-expense-50 blur-3xl" />
+          <div aria-hidden className="parallax-fast pointer-events-none absolute bottom-0 -left-32 -z-10 size-[26rem] rounded-full bg-brand-100/70 blur-3xl" />
+          <div className="px-5"><Story kept={ex.kept} /></div>
+        </section>
+
         {/* VÍDEO */}
         <section id="video" className="grid-paper relative scroll-mt-20 bg-ink py-24 text-white sm:py-32">
           <div className="mx-auto max-w-4xl px-5 text-center">
@@ -424,6 +515,20 @@ export default function Landing() {
             <div className="reveal mt-10 overflow-hidden rounded-3xl shadow-2xl ring-1 ring-white/15">
               <Video />
             </div>
+          </div>
+        </section>
+
+        {/* EQUIPO */}
+        <section id="equipo" className="scroll-mt-20 bg-white py-24 sm:py-28">
+          <div className="mx-auto max-w-6xl px-5">
+            <div className="reveal mx-auto max-w-2xl text-center">
+              <Eyebrow>El equipo</Eyebrow>
+              <h2 className="mt-4 text-4xl leading-tight font-semibold sm:text-5xl">Quién está detrás.</h2>
+              <p className="mt-4 text-lg text-ink-2">Cinco estudiantes de U-TAD construyendo NetTime en Proyectos III.</p>
+            </div>
+            <ul className="mt-14 grid grid-cols-2 gap-x-6 gap-y-12 sm:grid-cols-3 lg:grid-cols-5 [&>li:last-child]:col-span-2 sm:[&>li:last-child]:col-span-1">
+              {TEAM.map((m, i) => <Member key={m.name} {...m} i={i} />)}
+            </ul>
           </div>
         </section>
 
