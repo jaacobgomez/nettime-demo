@@ -1,4 +1,4 @@
-import { ArrowRight, Briefcase, CalendarClock, Clapperboard, Coins, Fuel, Gauge, Landmark, Moon, NotebookPen, PiggyBank, Play, Receipt, ShieldCheck, Timer, Zap, type LucideIcon } from 'lucide-react'
+import { ArrowRight, Briefcase, CalendarClock, Clapperboard, Coins, Fuel, Gauge, Info, Landmark, Moon, NotebookPen, PiggyBank, Play, Receipt, ShieldCheck, Timer, Zap, type LucideIcon } from 'lucide-react'
 import { useEffect, useMemo, useRef, type CSSProperties, type ReactNode } from 'react'
 import { Logo } from '../components/Layout'
 import { periodRange, profitability, summarize } from '../lib/calc'
@@ -194,7 +194,7 @@ export default function Landing() {
       steps: [
         { label: 'Factura', value: 100, from: 0, tone: 'bg-income', icon: Timer },
         { label: 'Gastos', value: -expenses, from: 100 - expenses, tone: 'bg-expense', icon: Fuel },
-        { label: 'Cuota', value: -quota, from: 100 - expenses - quota, tone: 'bg-quota', icon: Receipt },
+        { label: 'Autónomos', value: -quota, from: 100 - expenses - quota, tone: 'bg-quota', icon: Receipt, hint: 'Cuota mensual de autónomos (Seguridad Social), repartida entre lo que factura.' },
         { label: 'IRPF', value: -irpf, from: 100 - expenses - quota - irpf, tone: 'bg-reserve', icon: Landmark },
         { label: 'Le queda', value: 100 - expenses - quota - irpf, from: 0, tone: 'bg-mint', icon: PiggyBank },
       ],
@@ -290,7 +290,7 @@ export default function Landing() {
             <ol className="mx-auto mt-14 grid max-w-4xl grid-cols-3 gap-3 sm:gap-6">
               {[
                 { icon: Moon, t: '23:00', s: '180 € cobrados', tone: 'bg-income-50 text-income-700' },
-                { icon: Fuel, t: 'Mañana', s: 'Gastos y cuota', tone: 'bg-expense-50 text-expense-700' },
+                { icon: Fuel, t: 'Mañana', s: 'Gastos y autónomos', tone: 'bg-expense-50 text-expense-700' },
                 { icon: Landmark, t: 'Trimestre', s: 'Hacienda', tone: 'bg-reserve-50 text-reserve' },
               ].map(({ icon: Icon, t, s, tone }, i) => (
                 <li key={t} className="reveal relative flex flex-col items-center text-center" style={d(i * 140)}>
@@ -306,13 +306,23 @@ export default function Landing() {
             <div className="reveal mx-auto mt-16 max-w-4xl rounded-3xl bg-white p-6 shadow-sm ring-1 ring-line sm:p-10">
               <p className="text-center font-display text-lg font-semibold sm:text-xl">De cada <span className="text-income">100 €</span> que factura Pablo…</p>
               <div className="mt-8 space-y-3">
-                {ex.steps.map(({ label, value, from, tone, icon: Icon }, i) => {
+                {ex.steps.map(({ label, value, from, tone, icon: Icon, hint }: { label: string; value: number; from: number; tone: string; icon: LucideIcon; hint?: string }, i) => {
                   const w = Math.abs(value)
                   const last = i === ex.steps.length - 1
                   return (
                     <div key={label} className={'grid grid-cols-[6.5rem_1fr_3.5rem] items-center gap-3 sm:grid-cols-[8rem_1fr_4.5rem] ' + (last ? 'mt-5 border-t border-line pt-5' : '')}>
                       <span className={'flex items-center gap-2 text-sm font-medium sm:text-[15px] ' + (last ? 'font-semibold text-brand-700' : 'text-ink-2')}>
                         <Icon className="size-4 shrink-0" aria-hidden /> {label}
+                        {hint && (
+                          <span className="group relative inline-flex">
+                            <button type="button" aria-label={hint} className="rounded-full text-ink-3 outline-none hover:text-ink focus-visible:text-ink">
+                              <Info className="size-3.5" aria-hidden />
+                            </button>
+                            <span role="tooltip" className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 w-56 -translate-x-1/2 rounded-lg bg-ink px-3 py-2 text-xs leading-snug font-normal text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                              {hint}
+                            </span>
+                          </span>
+                        )}
                       </span>
                       <div className="relative h-7 rounded-md bg-canvas sm:h-8">
                         <div className={'grow-x absolute inset-y-0 rounded-md ' + tone} style={{ left: `${from}%`, width: `${w}%`, ...d(250 + i * 220) }} />
