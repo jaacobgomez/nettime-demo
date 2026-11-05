@@ -142,6 +142,18 @@ function Compare() {
 
 /* ── Historia de Pablo ────────────────────────────────────────── */
 
+/** Ilustraciones de la historia: public/historia/problema.jpg y solucion.jpg (16:10). Si faltan, no se muestran. */
+function StoryImg({ file, alt }: { file: string; alt: string }) {
+  const [ok, setOk] = useState(true)
+  if (!ok) return null
+  return (
+    <div className="-mx-7 -mt-7 mb-7 aspect-[16/10] overflow-hidden sm:-mx-9 sm:-mt-9 sm:mb-8">
+      <img src={`${import.meta.env.BASE_URL}historia/${file}`} alt={alt} loading="lazy" onError={() => setOk(false)}
+        className="size-full object-cover transition duration-700 group-hover:scale-105" />
+    </div>
+  )
+}
+
 function Story({ kept }: { kept: number }) {
   return (
     <div className="mx-auto max-w-5xl">
@@ -159,7 +171,8 @@ function Story({ kept }: { kept: number }) {
           <ArrowRight className="size-5" />
         </span>
 
-        <article className="reveal rounded-3xl bg-white p-7 shadow-sm ring-1 ring-line sm:p-9">
+        <article className="reveal group overflow-hidden rounded-3xl bg-white p-7 shadow-sm ring-1 ring-line sm:p-9">
+          <StoryImg file="problema.jpg" alt="Pablo, de noche en su taxi, preocupado mirando el dinero del día" />
           <p className="flex items-center gap-2 text-sm font-semibold tracking-wide text-expense-700 uppercase">
             <span className="flex size-9 items-center justify-center rounded-xl bg-expense-50"><TriangleAlert className="size-5" aria-hidden /></span>
             El problema
@@ -173,7 +186,8 @@ function Story({ kept }: { kept: number }) {
           </p>
         </article>
 
-        <article className="reveal grid-paper rounded-3xl bg-ink p-7 text-white shadow-2xl shadow-brand-700/20 ring-2 ring-mint sm:p-9" style={d(150)}>
+        <article className="reveal group grid-paper overflow-hidden rounded-3xl bg-ink p-7 text-white shadow-2xl shadow-brand-700/20 ring-2 ring-mint sm:p-9" style={d(150)}>
+          <StoryImg file="solucion.jpg" alt="Pablo, tranquilo, mirando en el móvil lo que le queda por hora" />
           <p className="flex items-center gap-2 text-sm font-semibold tracking-wide text-mint uppercase">
             <span className="flex size-9 items-center justify-center rounded-xl bg-mint/15"><Lightbulb className="size-5" aria-hidden /></span>
             La solución
@@ -524,7 +538,6 @@ export default function Landing() {
             <div className="reveal mx-auto max-w-2xl text-center">
               <Eyebrow>El equipo</Eyebrow>
               <h2 className="mt-4 text-4xl leading-tight font-semibold sm:text-5xl">Quién está detrás.</h2>
-              <p className="mt-4 text-lg text-ink-2">Cinco estudiantes de U-TAD construyendo NetTime en Proyectos III.</p>
             </div>
             <ul className="mt-14 grid grid-cols-2 gap-x-6 gap-y-12 sm:grid-cols-3 lg:grid-cols-5 [&>li:last-child]:col-span-2 sm:[&>li:last-child]:col-span-1">
               {TEAM.map((m, i) => <Member key={m.name} {...m} i={i} />)}
