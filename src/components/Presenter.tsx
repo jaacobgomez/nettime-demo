@@ -1,12 +1,13 @@
 import { ArrowLeft, ArrowRight, Mail, X } from 'lucide-react'
 import QRCode from 'qrcode'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { buildSeed } from '../lib/seed'
 import type { AppData, PeriodKey } from '../lib/types'
 import type { ISODate } from '../lib/dates'
 import { useStore } from '../store'
 import { Logo } from './Layout'
 import { cx } from './ui'
+import { TEAM, initials } from '../lib/team'
 
 export const DEMO_URL = 'https://jaacobgomez.github.io/nettime-demo/'
 
@@ -129,6 +130,25 @@ function Spotlight({ target }: { target: string | null }) {
   )
 }
 
+/** URL del QR sin https ni barra final, partible solo por las «/» */
+const DEMO_LABEL = DEMO_URL.replace('https://', '').replace(/\/$/, '').split('/')
+
+function TeamFace({ name, foto }: { name: string; foto: string }) {
+  const [noPhoto, setNoPhoto] = useState(false)
+  return (
+    <li className="flex w-24 flex-col items-center text-center sm:w-28 2xl:w-32">
+      <div className="size-16 overflow-hidden rounded-full bg-ink ring-2 ring-mint sm:size-20 2xl:size-24">
+        {noPhoto ? (
+          <span className="flex size-full items-center justify-center font-display text-xl font-semibold text-mint">{initials(name)}</span>
+        ) : (
+          <img src={`${import.meta.env.BASE_URL}equipo/${foto}`} alt={`Foto de ${name}`} onError={() => setNoPhoto(true)} className="size-full object-cover" />
+        )}
+      </div>
+      <p className="mt-2 text-sm leading-tight font-semibold">{name.split(' ')[0]}</p>
+    </li>
+  )
+}
+
 function FinalSlide() {
   const [qr, setQr] = useState('')
   useEffect(() => {
@@ -137,21 +157,24 @@ function FinalSlide() {
       .catch(() => setQr(''))
   }, [])
   return (
-    <div className="grid-paper fixed inset-0 z-[55] flex animate-fade-up items-center justify-center overflow-y-auto bg-ink px-6 py-10 text-white">
-      <div className="grid w-full max-w-5xl items-center gap-10 md:grid-cols-[1.2fr_1fr]">
+    <div className="grid-paper fixed inset-0 z-[55] flex animate-fade-up flex-col items-center gap-8 overflow-y-auto bg-ink px-6 pt-8 pb-32 text-white">
+      <div className="mt-auto grid w-full max-w-5xl items-center gap-8 md:grid-cols-[1.3fr_1fr]">
         <div>
-          <Logo size={64} />
-          <h2 className="mt-8 text-[2.6rem] leading-[1.05] font-semibold sm:text-[4.2rem]">Deja de trabajar<br /><span className="text-mint">a ciegas</span></h2>
+          <Logo size={56} />
+          <h2 className="mt-6 text-[2.4rem] leading-[1.05] font-semibold sm:text-[3.6rem]">Deja de trabajar<br /><span className="text-mint">a ciegas</span></h2>
           <p className="mt-6 flex items-center gap-3 text-lg text-white/80 sm:text-xl">
             <Mail className="size-6 shrink-0 text-mint" aria-hidden /> Mirad vuestro correo: tenéis la demo para probarla cuando queráis.
           </p>
           <p className="mt-2 text-white/60">¿Ideas o dudas? Respondednos al correo. Estamos abiertos a sugerencias.</p>
         </div>
-        <div className="mx-auto w-full max-w-xs rounded-2xl bg-white p-5 text-center text-ink shadow-2xl">
+        <div className="mx-auto w-full max-w-[17rem] rounded-2xl bg-white p-5 text-center text-ink shadow-2xl">
           {qr ? <div className="aspect-square w-full [&>svg]:size-full" dangerouslySetInnerHTML={{ __html: qr }} role="img" aria-label="Código QR de la demo" /> : <div className="aspect-square w-full" />}
-          <p className="mt-3 text-sm font-semibold break-all">{DEMO_URL.replace('https://', '')}</p>
+          <p className="mt-3 text-sm font-semibold">{DEMO_LABEL.map((part, i) => <Fragment key={part}>{i > 0 && <wbr />}<span className="whitespace-nowrap">{i ? '/' : ''}{part}</span></Fragment>)}</p>
         </div>
       </div>
+      <ul className="mb-auto flex w-full max-w-5xl flex-wrap justify-center gap-x-8 gap-y-4 border-t border-white/10 pt-6" aria-label="Equipo NetTime">
+        {TEAM.map((m) => <TeamFace key={m.name} name={m.name} foto={m.foto} />)}
+      </ul>
     </div>
   )
 }

@@ -5,6 +5,7 @@ import { periodRange, profitability, summarize } from '../lib/calc'
 import { todayISO } from '../lib/dates'
 import { eur } from '../lib/format'
 import { buildSeed } from '../lib/seed'
+import { TEAM, initials } from '../lib/team'
 
 /**
  * Vídeo conceptual (1 min). Pega aquí el enlace cuando esté grabado:
@@ -201,26 +202,13 @@ function Story({ kept }: { kept: number }) {
 
 /* ── Equipo ──────────────────────────────────────────────────── */
 
-/**
- * Fotos: deja cada una en public/equipo/ con el nombre de `foto` (cuadrada, ~600 px).
- * Si falta, se ven las iniciales.
- */
-const TEAM: { name: string; role: string; foto: string }[] = [
-  { name: 'Alejandro Castellanos', role: 'Product Owner · Diseño', foto: 'alejandro.jpg' },
-  { name: 'Jacob Gómez', role: 'Scrum Master · Front-end', foto: 'jacob.jpg' },
-  { name: 'Manuel Albizu', role: 'Full-stack', foto: 'manuel.jpg' },
-  { name: 'Marc Estellers', role: 'Full-stack', foto: 'marc.jpg' },
-  { name: 'Pablo Franco', role: 'Front-end · Pruebas', foto: 'pablo.jpg' },
-]
-
 function Member({ name, role, foto, i }: { name: string; role: string; foto: string; i: number }) {
   const [noPhoto, setNoPhoto] = useState(false)
-  const initials = name.split(' ').map((w) => w[0]).slice(0, 2).join('')
   return (
     <li className="reveal group flex flex-col items-center text-center" style={d(i * 90)}>
       <div className="relative size-32 overflow-hidden rounded-full bg-ink ring-4 ring-white shadow-lg transition group-hover:-translate-y-1 group-hover:shadow-xl sm:size-36">
         {noPhoto ? (
-          <span className="grid-paper flex size-full items-center justify-center font-display text-3xl font-semibold text-mint">{initials}</span>
+          <span className="grid-paper flex size-full items-center justify-center font-display text-3xl font-semibold text-mint">{initials(name)}</span>
         ) : (
           <img src={`${import.meta.env.BASE_URL}equipo/${foto}`} alt={`Foto de ${name}`} loading="lazy" onError={() => setNoPhoto(true)} className="size-full object-cover" />
         )}
