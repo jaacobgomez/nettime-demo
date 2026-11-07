@@ -12,7 +12,7 @@ import { buildSeed } from '../lib/seed'
  * - o un archivo propio en public/, p. ej. 'video-nettime.mp4'
  * Vacío = se muestra el aviso de "próximamente".
  */
-export const VIDEO_URL = ''
+export const VIDEO_URL = 'video-nettime.mp4'
 
 const APP_URL = '#/resumen'
 
