@@ -1,7 +1,7 @@
 import { ArrowRight, Briefcase, CalendarClock, CarTaxiFront, Clapperboard, Coins, Fuel, Gauge, Info, Landmark, Lightbulb, Moon, NotebookPen, PiggyBank, Play, Receipt, ShieldCheck, Timer, TriangleAlert, Zap, type LucideIcon } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { Logo } from '../components/Layout'
-import { periodRange, profitability, summarize } from '../lib/calc'
+import { profitability } from '../lib/calc'
 import { todayISO } from '../lib/dates'
 import { eur } from '../lib/format'
 import { buildSeed } from '../lib/seed'
@@ -73,7 +73,7 @@ function Eyebrow({ children, light = false }: { children: ReactNode; light?: boo
 const NEEDS: { icon: LucideIcon; label: string }[] = [
   { icon: Gauge, label: 'Neto por hora' },
   { icon: Zap, label: 'En segundos' },
-  { icon: Landmark, label: 'Lo de Hacienda' },
+  { icon: Landmark, label: 'Impuestos' },
   { icon: CalendarClock, label: 'Mejores turnos' },
   { icon: Coins, label: 'Sin cuotas' },
 ]
@@ -163,7 +163,7 @@ function Story({ kept }: { kept: number }) {
           <CarTaxiFront className="size-9" aria-hidden />
         </span>
         <Eyebrow>La historia de Pablo</Eyebrow>
-        <h2 className="mt-4 text-4xl leading-tight font-semibold sm:text-5xl">Diez horas al volante.<br /><span className="text-brand-600">¿Y cuánto es suyo?</span></h2>
+        <h2 className="mt-4 text-4xl leading-tight font-semibold sm:text-5xl">Once horas al volante.<br /><span className="text-brand-600">¿Y cuánto es suyo?</span></h2>
         <p className="mt-4 text-ink-2">Pablo, taxista autónomo en Madrid · personaje de ejemplo</p>
       </div>
 
@@ -179,7 +179,7 @@ function Story({ kept }: { kept: number }) {
             El problema
           </p>
           <p className="mt-5 text-lg leading-relaxed text-ink-2">
-            Cobra <strong className="text-ink">180 €</strong> en diez horas, pero aún faltan gasolina, autónomos y Hacienda.
+            Cobra <strong className="text-ink">180 €</strong> en once horas, pero aún faltan gasolina, autónomos e impuestos.
             ¿Le <strong className="text-ink">compensa</strong>?
           </p>
         </article>
@@ -248,34 +248,32 @@ function Video() {
   )
 }
 
+/** Turno de Pablo del vídeo conceptual. Si cambia el vídeo, cambia aquí. */
+const TURNO = { cobrado: 180, horas: 11, gasolina: 42, cuota: 14, irpf: 20.6 }
+
 /* ── Página ──────────────────────────────────────────────────── */
 
 export default function Landing() {
   const root = useReveal()
 
-  // Cifras del cliente de ejemplo: las mismas que verás en la demo
+  // Cifras del turno de Pablo: las mismas del vídeo conceptual (180 € en 11 h → 9,40 €/h)
   const ex = useMemo(() => {
-    const today = todayISO()
-    const seed = buildSeed(today)
-    const s = summarize(seed, periodRange('all', today, seed), today)
-    const billed = s.billedPerHour ?? 0
-    const kept = s.availablePerHour ?? 0
-    const base = s.incomeBase || 1
-    const per = (n: number) => Math.round((n / base) * 100)
-    const expenses = per(s.expenses)
-    const quota = per(s.quota)
-    const irpf = per(s.irpfReserve)
+    const { cobrado, horas, gasolina, cuota, irpf } = TURNO
+    const kept = cobrado - gasolina - cuota - irpf
+    const pct = (n: number) => (n / cobrado) * 100
+    const seed = buildSeed(todayISO())
     const days = profitability(seed).byWeekday.map((g) => ({ label: g.label.slice(0, 1), full: g.label, v: g.marginPerHour ?? 0 }))
     const maxDay = Math.max(1, ...days.map((x) => x.v))
     return {
-      billed, kept,
-      pct: billed > 0 ? Math.max(8, Math.min(100, (kept / billed) * 100)) : 0,
+      billed: cobrado / horas,
+      kept: kept / horas,
+      pct: (kept / cobrado) * 100,
       steps: [
-        { label: 'Factura', value: 100, from: 0, tone: 'bg-income', icon: Timer },
-        { label: 'Gastos', value: -expenses, from: 100 - expenses, tone: 'bg-expense', icon: Fuel },
-        { label: 'Autónomos', value: -quota, from: 100 - expenses - quota, tone: 'bg-quota', icon: Receipt, hint: 'Cuota mensual de autónomos (Seguridad Social), repartida entre lo que factura.' },
-        { label: 'IRPF', value: -irpf, from: 100 - expenses - quota - irpf, tone: 'bg-reserve', icon: Landmark },
-        { label: 'Le queda', value: 100 - expenses - quota - irpf, from: 0, tone: 'bg-mint', icon: PiggyBank },
+        { label: 'Cobrado', value: cobrado, from: 0, width: 100, tone: 'bg-income', icon: Timer },
+        { label: 'Gasolina', value: -gasolina, from: pct(cobrado - gasolina), width: pct(gasolina), tone: 'bg-expense', icon: Fuel },
+        { label: 'Autónomos', value: -cuota, from: pct(cobrado - gasolina - cuota), width: pct(cuota), tone: 'bg-quota', icon: Receipt, hint: 'Cuota de autónomos y seguro, repartidos por día trabajado.' },
+        { label: 'IRPF', value: -irpf, from: pct(kept), width: pct(irpf), tone: 'bg-reserve', icon: Landmark },
+        { label: 'Le queda', value: kept, from: 0, width: pct(kept), tone: 'bg-mint', icon: PiggyBank },
       ],
       days: days.map((x) => ({ ...x, h: Math.max(6, (x.v / maxDay) * 100), best: x.v === maxDay })),
     }
@@ -350,8 +348,8 @@ export default function Landing() {
                   </dl>
                 </div>
               </div>
-              <span aria-hidden className="badge-pop badge-left absolute -top-6 -left-5 z-20 hidden items-center gap-2 rounded-full bg-expense px-3.5 py-2 text-sm font-semibold text-white shadow-xl sm:flex"><Fuel className="size-4" /> −25 € gastos</span>
-              <span aria-hidden className="badge-pop badge-right absolute -right-4 -bottom-5 z-20 hidden items-center gap-2 rounded-full bg-reserve px-3.5 py-2 text-sm font-semibold text-white shadow-xl sm:flex"><Landmark className="size-4" /> −10 € IRPF</span>
+              <span aria-hidden className="badge-pop badge-left absolute -top-6 -left-5 z-20 hidden items-center gap-2 rounded-full bg-expense px-3.5 py-2 text-sm font-semibold text-white shadow-xl sm:flex"><Fuel className="size-4" /> −42 € gasolina</span>
+              <span aria-hidden className="badge-pop badge-right absolute -right-4 -bottom-5 z-20 hidden items-center gap-2 rounded-full bg-reserve px-3.5 py-2 text-sm font-semibold text-white shadow-xl sm:flex"><Landmark className="size-4" /> −20,60 € IRPF</span>
             </div>
           </div>
 
@@ -373,7 +371,7 @@ export default function Landing() {
               {[
                 { icon: Moon, t: '23:00', s: '180 € cobrados', tone: 'bg-income-50 text-income-700' },
                 { icon: Fuel, t: 'Mañana', s: 'Gastos y autónomos', tone: 'bg-expense-50 text-expense-700' },
-                { icon: Landmark, t: 'Trimestre', s: 'Hacienda', tone: 'bg-reserve-50 text-reserve' },
+                { icon: Landmark, t: 'Trimestre', s: 'Impuestos', tone: 'bg-reserve-50 text-reserve' },
               ].map(({ icon: Icon, t, s, tone }, i) => (
                 <li key={t} className="reveal relative flex flex-col items-center text-center" style={d(i * 140)}>
                   {i < 2 && <span aria-hidden className="grow-x absolute top-9 left-[calc(50%+2.75rem)] hidden h-0.5 w-[calc(100%-5.5rem+1.5rem)] bg-line-strong sm:block" style={d(300 + i * 140)} />}
@@ -384,15 +382,14 @@ export default function Landing() {
               ))}
             </ol>
 
-            {/* Cascada: de 100 € a lo que queda */}
+            {/* Cascada: del turno de 180 € a lo que queda */}
             <div className="reveal mx-auto mt-16 max-w-4xl rounded-3xl bg-white p-6 shadow-sm ring-1 ring-line sm:p-10">
-              <p className="text-center font-display text-lg font-semibold sm:text-xl">De cada <span className="text-income">100 €</span> que factura Pablo…</p>
+              <p className="text-center font-display text-lg font-semibold sm:text-xl">Un turno de Pablo: <span className="text-income">180 €</span> cobrados. ¿Cuánto es suyo?</p>
               <div className="mt-8 space-y-3">
-                {ex.steps.map(({ label, value, from, tone, icon: Icon, hint }: { label: string; value: number; from: number; tone: string; icon: LucideIcon; hint?: string }, i) => {
-                  const w = Math.abs(value)
+                {ex.steps.map(({ label, value, from, width, tone, icon: Icon, hint }: { label: string; value: number; from: number; width: number; tone: string; icon: LucideIcon; hint?: string }, i) => {
                   const last = i === ex.steps.length - 1
                   return (
-                    <div key={label} className={'grid grid-cols-[6.5rem_1fr_3.5rem] items-center gap-3 sm:grid-cols-[8rem_1fr_4.5rem] ' + (last ? 'mt-5 border-t border-line pt-5' : '')}>
+                    <div key={label} className={'grid grid-cols-[6.5rem_1fr_5rem] items-center gap-3 sm:grid-cols-[8rem_1fr_6.5rem] ' + (last ? 'mt-5 border-t border-line pt-5' : '')}>
                       <span className={'flex items-center gap-2 text-sm font-medium sm:text-[15px] ' + (last ? 'font-semibold text-brand-700' : 'text-ink-2')}>
                         <Icon className="size-4 shrink-0" aria-hidden /> {label}
                         {hint && (
@@ -407,10 +404,10 @@ export default function Landing() {
                         )}
                       </span>
                       <div className="relative h-7 rounded-md bg-canvas sm:h-8">
-                        <div className={'grow-x absolute inset-y-0 rounded-md ' + tone} style={{ left: `${from}%`, width: `${w}%`, ...d(250 + i * 220) }} />
+                        <div className={'grow-x absolute inset-y-0 rounded-md ' + tone} style={{ left: `${from}%`, width: `${width}%`, ...d(250 + i * 220) }} />
                       </div>
                       <span className={'figure text-right font-semibold ' + (last ? 'text-2xl text-brand-600' : 'text-ink-2')}>
-                        {value < 0 ? '−' : ''}{w} €
+                        {value < 0 ? '−' : ''}{eur(Math.abs(value))}
                       </span>
                     </div>
                   )
@@ -473,7 +470,7 @@ export default function Landing() {
                   ))}
                   <PiggyBank className="mb-6 size-14 text-reserve transition group-hover:-translate-y-1" aria-hidden />
                 </div>
-                <div className="p-6"><h3 className="text-xl font-semibold">Hacienda, apartada</h3><p className="mt-1 text-ink-2">Cada día, sin sustos.</p></div>
+                <div className="p-6"><h3 className="text-xl font-semibold">Impuestos, apartados</h3><p className="mt-1 text-ink-2">Cada día, sin sustos.</p></div>
               </article>
 
               {/* 3 · Mejores turnos */}
