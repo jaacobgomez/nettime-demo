@@ -143,9 +143,13 @@ export function summarize(data: AppData, r: Range, today: ISODate): Summary {
   const expenses = round2(movs.filter(isExpense).reduce((a, m) => a + m.amount, 0))
   const operatingMargin = round2(incomeBase - expenses)
 
-  const end = imputationEnd(data, r, today)
-  const quota = imputedQuota(data.settings.monthlyQuota, r.from, end)
-  const quotaDays = end === null ? 0 : eachDay(r.from, end).length
+  // La cuota se imputa desde el primer registro: sin datos no hay cuota, y quien empieza hoy no carga con el mes entero.
+  const dates = recordDates(data)
+  const first = dates.length ? dates.reduce((a, b) => (b < a ? b : a)) : null
+  const start = first !== null && first > r.from ? first : r.from
+  const end = first === null ? null : imputationEnd(data, r, today)
+  const quota = imputedQuota(data.settings.monthlyQuota, start, end)
+  const quotaDays = end === null || end < start ? 0 : eachDay(start, end).length
 
   const irpfBase = Math.max(0, operatingMargin - quota)
   const irpfReserve = round2((irpfBase * data.settings.irpfPct) / 100)

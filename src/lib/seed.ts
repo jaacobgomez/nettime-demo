@@ -92,3 +92,8 @@ export function buildSeed(today: ISODate): AppData {
   movements.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
   return { movements, shifts, settings: { ...DEFAULT_SETTINGS }, seededOn: today }
 }
+
+/** Arranque real: sin movimientos ni jornadas. Cuota e IRPF quedan con valores típicos (editables). */
+export function emptyData(today: ISODate): AppData {
+  return { movements: [], shifts: [], settings: { ...DEFAULT_SETTINGS, name: '', monthlyGoal: 0, setAside: 0 }, seededOn: today }
+}

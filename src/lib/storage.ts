@@ -1,9 +1,10 @@
 // Persistencia versionada en localStorage con recuperación segura.
 import { isValidISO, isValidTime, type ISODate } from './dates'
-import { buildSeed } from './seed'
+import { emptyData } from './seed'
 import type { AppData, Movement, Settings, Shift } from './types'
 
-export const STORAGE_KEY = 'nettime-demo'
+// Clave nueva: quien abrió la demo del Sprint 2 (con datos de ejemplo guardados) empieza de cero.
+export const STORAGE_KEY = 'nettime-datos'
 export const STORAGE_VERSION = 2
 
 type Stored = { version: number; data: AppData }
@@ -53,9 +54,9 @@ export function load(today: ISODate): LoadResult {
   try {
     raw = localStorage.getItem(STORAGE_KEY)
   } catch {
-    return { data: buildSeed(today), status: 'fresh' }
+    return { data: emptyData(today), status: 'fresh' }
   }
-  if (raw === null) return { data: buildSeed(today), status: 'fresh' }
+  if (raw === null) return { data: emptyData(today), status: 'fresh' }
   try {
     const parsed: unknown = JSON.parse(raw)
     if (isRec(parsed) && isNum(parsed.version)) {
@@ -65,7 +66,7 @@ export function load(today: ISODate): LoadResult {
   } catch {
     // JSON dañado: se recupera abajo
   }
-  return { data: buildSeed(today), status: 'recovered' }
+  return { data: emptyData(today), status: 'recovered' }
 }
 
 export function save(data: AppData): boolean {
