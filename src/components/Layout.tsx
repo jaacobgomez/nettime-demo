@@ -30,14 +30,16 @@ export function Logo({ size = 28, wordmark = true, className }: { size?: number;
 }
 
 export function Layout({ route, children }: { route: Route; children: ReactNode }) {
-  const { resetDemo, notify, data, startTour } = useStore()
+  const { resetDemo, notify, data, startTour, tourOpen } = useStore()
   const [confirm, setConfirm] = useState(false)
   const presentation = usePresentation()
-  const initials = data.settings.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase()
+  const profileName = data.settings.name.trim() || 'Tu perfil'
+  const badge = tourOpen || presentation.presenting ? 'Modo demo · Datos de ejemplo' : 'Demo · Tus datos, solo en este navegador'
+  const initials = profileName.normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase()
 
   const reset = () => {
     resetDemo()
-    notify('Demo restablecida con los datos de ejemplo.')
+    notify('Datos borrados. La app está a cero.')
   }
 
   return (
@@ -78,7 +80,7 @@ export function Layout({ route, children }: { route: Route; children: ReactNode 
           <div className="mb-3 flex items-center gap-3 px-2">
             <span className="flex size-9 items-center justify-center rounded-full bg-mint/90 font-display text-sm font-semibold text-ink" aria-hidden>{initials}</span>
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium">{data.settings.name}</p>
+              <p className="truncate text-sm font-medium">{profileName}</p>
               <p className="truncate text-xs text-white/55">{data.settings.activity}</p>
             </div>
           </div>
@@ -92,10 +94,10 @@ export function Layout({ route, children }: { route: Route; children: ReactNode 
             <CircleHelp className="size-4" aria-hidden /> Ver tutorial
           </button>
           <button type="button" onClick={() => setConfirm(true)} className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-white/70 hover:bg-white/5 hover:text-white">
-            <RotateCcw className="size-4" aria-hidden /> Restablecer demo
+            <RotateCcw className="size-4" aria-hidden /> Borrar mis datos
           </button>
           <p className="flex items-center gap-1.5 px-2 pt-2 text-[11px] text-amber-200/90">
-            <span className="size-1.5 rounded-full bg-amber-300" aria-hidden /> Modo demo · Datos de ejemplo
+            <span className="size-1.5 rounded-full bg-amber-300" aria-hidden /> {badge}
           </p>
         </div>
       </aside>
@@ -106,12 +108,12 @@ export function Layout({ route, children }: { route: Route; children: ReactNode 
           <a href="#/resumen" aria-label="NetTime, ir al resumen" className="text-white"><Logo size={26} /></a>
           <div className="flex items-center gap-1">
             <span className="mr-1 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2 py-1 text-[11px] font-medium whitespace-nowrap text-amber-100">
-              <span className="size-1.5 rounded-full bg-amber-300" aria-hidden />Modo demo · Datos de ejemplo
+              <span className="size-1.5 rounded-full bg-amber-300" aria-hidden />{badge}
             </span>
             <button type="button" data-tour="help" onClick={startTour} className="inline-flex size-9 items-center justify-center rounded-lg text-white/80 hover:bg-white/10" aria-label="Ver tutorial" title="Ver tutorial">
               <CircleHelp className="size-5" aria-hidden />
             </button>
-            <button type="button" onClick={() => setConfirm(true)} className="inline-flex size-9 items-center justify-center rounded-lg text-white/80 hover:bg-white/10" aria-label="Restablecer demo" title="Restablecer demo">
+            <button type="button" onClick={() => setConfirm(true)} className="inline-flex size-9 items-center justify-center rounded-lg text-white/80 hover:bg-white/10" aria-label="Borrar mis datos" title="Borrar mis datos">
               <RotateCcw className="size-4" aria-hidden />
             </button>
           </div>
@@ -140,8 +142,8 @@ export function Layout({ route, children }: { route: Route; children: ReactNode 
         ))}
       </nav>
 
-      <ConfirmDialog open={confirm} onClose={() => setConfirm(false)} onConfirm={reset} title="¿Restablecer la demo?" confirmLabel="Restablecer">
-        Se borrarán los movimientos, jornadas y ajustes que hayas cambiado y se cargarán de nuevo los datos de ejemplo.
+      <ConfirmDialog open={confirm} onClose={() => setConfirm(false)} onConfirm={reset} title="¿Borrar tus datos?" confirmLabel="Borrar">
+        Se borrarán todos tus movimientos, jornadas y ajustes de este navegador y la app quedará a cero. Los datos de ejemplo siguen en el tutorial.
       </ConfirmDialog>
     </div>
   )

@@ -24,7 +24,7 @@ function SettingsForm() {
     const irpf = parseAmount(v.irpf)
     const goal = parseAmount(v.goal)
     const errs = {
-      name: !v.name.trim() ? 'Escribe un nombre.' : v.name.length > 60 ? 'Máximo 60 caracteres.' : undefined,
+      name: v.name.length > 60 ? 'Máximo 60 caracteres.' : undefined,
       activity: !v.activity.trim() ? 'Describe la actividad.' : v.activity.length > 80 ? 'Máximo 80 caracteres.' : undefined,
       quota: quota === null || quota > 2000 ? 'Indica una cuota entre 0 y 2.000 €.' : undefined,
       irpf: irpf === null || irpf > 60 ? 'Indica un porcentaje entre 0 y 60.' : undefined,
@@ -88,7 +88,7 @@ export default function Objetivo() {
           <span className="text-ink-2">de {eur(g.goal)} de disponible estimado</span>
         </div>
         <Progress value={g.pct} label="Progreso hacia el objetivo mensual" />
-        <p className="num mt-2 text-sm text-ink-2">{Math.round(g.pct)} % conseguido</p>
+        <p className="num mt-2 text-sm text-ink-2">{g.goal > 0 ? `${Math.round(g.pct)} % conseguido` : 'Aún no has puesto un objetivo: fíjalo abajo, en tus ajustes.'}</p>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <div className="rounded-xl bg-canvas p-3">
@@ -128,10 +128,10 @@ export default function Objetivo() {
 
       <Card className="mt-4" aria-labelledby="datos">
         <CardTitle id="datos">Datos de la demo</CardTitle>
-        <p className="text-sm text-ink-2">Todo se guarda solo en este navegador. Restablecer recupera los movimientos, jornadas y ajustes de ejemplo.</p>
+        <p className="text-sm text-ink-2">Todo se guarda solo en este navegador. La app empieza a cero; para ver datos de ejemplo, abre el tutorial.</p>
         <div className="mt-3 flex flex-wrap gap-2">
           {presentation.available && <Button variant="primary" onClick={presentation.start}><Presentation className="size-4" aria-hidden /> Modo presentación</Button>}
-          <Button onClick={() => setConfirm(true)}><RotateCcw className="size-4" aria-hidden /> Restablecer demo</Button>
+          <Button onClick={() => setConfirm(true)}><RotateCcw className="size-4" aria-hidden /> Borrar mis datos</Button>
         </div>
         {presentation.available && <p className="mt-3 text-xs text-ink-3">El modo presentación recorre la demo en 7 pasos con las flechas o un mando de diapositivas. Al salir (Esc), tus datos vuelven a estar como antes.</p>}
       </Card>
@@ -139,11 +139,11 @@ export default function Objetivo() {
       <ConfirmDialog
         open={confirm}
         onClose={() => setConfirm(false)}
-        onConfirm={() => { resetDemo(); notify('Demo restablecida con los datos de ejemplo.') }}
-        title="¿Restablecer la demo?"
-        confirmLabel="Restablecer"
+        onConfirm={() => { resetDemo(); notify('Datos borrados. La app está a cero.') }}
+        title="¿Borrar tus datos?"
+        confirmLabel="Borrar"
       >
-        Se borrarán los movimientos, jornadas y ajustes que hayas cambiado y se cargarán de nuevo los datos de ejemplo.
+        Se borrarán todos tus movimientos, jornadas y ajustes de este navegador y la app quedará a cero. Los datos de ejemplo siguen en el tutorial.
       </ConfirmDialog>
     </>
   )

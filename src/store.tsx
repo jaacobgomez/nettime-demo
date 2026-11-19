@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { todayISO, type ISODate } from './lib/dates'
-import { buildSeed } from './lib/seed'
+import { buildSeed, emptyData } from './lib/seed'
 import { load, newId, save, STORAGE_KEY } from './lib/storage'
 import type { AppData, Movement, PeriodKey, Settings, Shift } from './lib/types'
 
@@ -26,6 +26,7 @@ type Store = {
   saveShift: (s: Omit<Shift, 'id'> & { id?: string }, movementIds: string[]) => void
   deleteShift: (id: string) => void
   updateSettings: (patch: Partial<Settings>) => void
+  /** Borra todo y deja la app a cero */
   resetDemo: () => void
   toasts: Toast[]
   notify: (text: string, tone?: Toast['tone']) => void
@@ -50,10 +51,6 @@ const Ctx = createContext<Store | null>(null)
 export function StoreProvider({ children }: { children: ReactNode }) {
   const today = useMemo(() => todayISO(), [])
   const initial = useMemo(() => load(today), [today])
-  const [data, setData] = useState<AppData>(initial.data)
-  const [period, setPeriod] = useState<PeriodKey>('month')
-  const [toasts, setToasts] = useState<Toast[]>([])
-  const [form, setForm] = useState<FormRequest | null>(null)
   const [tourOpen, setTourOpen] = useState(() => {
     try {
       return localStorage.getItem(TOUR_KEY) === null
@@ -61,6 +58,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       return false
     }
   })
+  // Tutorial: enseña los datos de ejemplo y aparta los del usuario hasta que se cierra (como el modo presentación).
+  const tourSnap = useRef<AppData | null>(tourOpen ? initial.data : null)
+  const [data, setData] = useState<AppData>(() => (tourOpen ? buildSeed(today) : initial.data))
+  const [period, setPeriod] = useState<PeriodKey>('month')
+  const [toasts, setToasts] = useState<Toast[]>([])
+  const [form, setForm] = useState<FormRequest | null>(null)
   const [presenting, setPresenting] = useState(false)
   const snapshot = useRef<{ data: AppData; period: PeriodKey } | null>(null)
   const toastId = useRef(0)
@@ -77,20 +80,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   )
 
   useEffect(() => {
-    if (initial.status === 'recovered') notify('Los datos guardados estaban dañados. Se ha cargado la demo original.', 'error')
+    if (initial.status === 'recovered') notify('Los datos guardados estaban dañados. Se ha empezado de cero.', 'error')
   }, [initial.status, notify])
 
   useEffect(() => {
-    if (presenting) return
+    if (presenting || tourOpen) return
     const ok = save(data)
     if (!ok && !saveFailed.current) notify('No se pueden guardar los cambios en este navegador.', 'error')
     saveFailed.current = !ok
-  }, [data, notify, presenting])
+  }, [data, notify, presenting, tourOpen])
 
   // Otra pestaña ha cambiado los datos
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
-      if (e.key === STORAGE_KEY) setData(load(today).data)
+      // Con el tutorial o la presentación abiertos se ignora: al cerrar se recuperan los datos propios.
+      if (e.key === STORAGE_KEY && !tourSnap.current && !snapshot.current) setData(load(today).data)
     }
     window.addEventListener('storage', onStorage)
     return () => window.removeEventListener('storage', onStorage)
@@ -140,17 +144,26 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const resetDemo = useCallback(() => {
-    setData(buildSeed(today))
+    setData(emptyData(today))
     setPeriod('month')
   }, [today])
 
   const startTour = useCallback(() => {
+    if (presenting) return
     setForm(null)
+    setData((d) => {
+      if (tourSnap.current === null) tourSnap.current = d
+      return buildSeed(today)
+    })
     if (!window.location.hash.startsWith('#/resumen') && window.location.hash !== '') window.location.hash = '#/resumen'
     setTourOpen(true)
-  }, [])
+  }, [presenting, today])
   const endTour = useCallback(() => {
     setTourOpen(false)
+    setForm(null)
+    const own = tourSnap.current
+    tourSnap.current = null
+    if (own) setData(own)
     try {
       localStorage.setItem(TOUR_KEY, '1')
     } catch {
@@ -160,7 +173,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const startPresentation = useCallback(() => {
     if (presenting) return
-    snapshot.current = { data, period }
+    // Si el tutorial estaba abierto, lo que hay que recuperar al salir son los datos del usuario, no los de ejemplo.
+    snapshot.current = { data: tourSnap.current ?? data, period }
+    tourSnap.current = null
     setForm(null)
     setTourOpen(false)
     setPresenting(true)

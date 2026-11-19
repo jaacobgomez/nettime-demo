@@ -9,7 +9,7 @@ type Step = { target?: string; title: string; body: string }
 const STEPS: Step[] = [
   {
     title: 'Bienvenido a NetTime',
-    body: 'Te enseñamos lo esencial en un minuto. Verás los datos de ejemplo de Pablo Álvarez, taxista autónomo en Madrid. Puedes tocarlo todo: nada sale de tu navegador.',
+    body: 'Te enseñamos lo esencial en un minuto. Verás los datos de ejemplo de Pablo Álvarez, taxista autónomo en Madrid. Al cerrarlo, la app queda a cero para que apuntes lo tuyo. Nada sale de tu navegador.',
   },
   {
     target: 'hero',

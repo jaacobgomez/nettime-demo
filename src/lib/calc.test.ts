@@ -84,10 +84,19 @@ describe('resumen', () => {
     expect(s.availablePerHour).toBeNull()
     for (const v of [s.incomeBase, s.available, s.quota, s.irpfReserve]) expect(Number.isNaN(v)).toBe(false)
   })
-  it('no imputa cuota de días futuros sin registros', () => {
+  it('sin registros no imputa cuota (la app arranca a cero)', () => {
     const s = summarize(empty(), periodRange('month', TODAY, empty()), TODAY)
-    expect(s.quotaDays).toBe(2)
+    expect(s.quotaDays).toBe(0)
+    expect(s.quota).toBe(0)
+    expect(s.available).toBe(0)
     expect(dailySeries(empty(), periodRange('week', TODAY, empty()), TODAY)).toHaveLength(1)
+  })
+  it('imputa la cuota desde el primer registro, no desde el inicio del mes', () => {
+    const d = empty()
+    d.movements.push({ id: 'a', kind: 'income', date: '2026-11-20', concept: 'x', source: 's', base: 180, vatRate: 10, shiftId: null })
+    const s = summarize(d, periodRange('month', '2026-11-21', d), '2026-11-21')
+    expect(s.quotaDays).toBe(2)
+    expect(s.quota).toBe(imputedQuota(d.settings.monthlyQuota, '2026-11-20', '2026-11-21'))
   })
 })
 
