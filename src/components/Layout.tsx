@@ -34,7 +34,10 @@ export function Layout({ route, children }: { route: Route; children: ReactNode 
   const [confirm, setConfirm] = useState(false)
   const presentation = usePresentation()
   const profileName = data.settings.name.trim() || 'Tu perfil'
-  const badge = tourOpen || presentation.presenting ? 'Modo demo · Datos de ejemplo' : 'Demo · Tus datos, solo en este navegador'
+  const example = tourOpen || presentation.presenting
+  const badge = example ? 'Modo demo · Datos de ejemplo' : 'Demo · Tus datos, solo en este navegador'
+  // En el móvil, versión corta: la larga empujaba los botones fuera de la pantalla
+  const badgeShort = example ? 'Datos de ejemplo' : 'Tus datos'
   const initials = profileName.normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase()
 
   const reset = () => {
@@ -105,15 +108,20 @@ export function Layout({ route, children }: { route: Route; children: ReactNode 
       <div className="min-w-0">
         {/* Móvil y tableta: cabecera */}
         <header className="sticky top-0 z-30 flex items-center justify-between gap-2 bg-ink px-4 py-3 text-white lg:hidden">
-          <a href="#/resumen" aria-label="NetTime, ir al resumen" className="text-white"><Logo size={26} /></a>
-          <div className="flex items-center gap-1">
-            <span className="mr-1 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2 py-1 text-[11px] font-medium whitespace-nowrap text-amber-100">
-              <span className="size-1.5 rounded-full bg-amber-300" aria-hidden />{badge}
+          <a href="#/resumen" aria-label="NetTime, ir al resumen" className="shrink-0 text-white"><Logo size={26} /></a>
+          <div className="flex min-w-0 items-center gap-1">
+            <span title={badge} className="mr-1 inline-flex min-w-0 items-center gap-1.5 rounded-full bg-white/10 px-2 py-1 text-[11px] font-medium text-amber-100">
+              <span className="size-1.5 shrink-0 rounded-full bg-amber-300" aria-hidden /><span className="truncate">{badgeShort}</span>
             </span>
-            <button type="button" data-tour="help" onClick={startTour} className="inline-flex size-9 items-center justify-center rounded-lg text-white/80 hover:bg-white/10" aria-label="Ver tutorial" title="Ver tutorial">
+            {presentation.available && (
+              <button type="button" onClick={presentation.start} className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-mint hover:bg-white/10" aria-label="Modo presentación" title="Modo presentación">
+                <Presentation className="size-5" aria-hidden />
+              </button>
+            )}
+            <button type="button" data-tour="help" onClick={startTour} className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-white/80 hover:bg-white/10" aria-label="Ver tutorial" title="Ver tutorial">
               <CircleHelp className="size-5" aria-hidden />
             </button>
-            <button type="button" onClick={() => setConfirm(true)} className="inline-flex size-9 items-center justify-center rounded-lg text-white/80 hover:bg-white/10" aria-label="Borrar mis datos" title="Borrar mis datos">
+            <button type="button" onClick={() => setConfirm(true)} className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-white/80 hover:bg-white/10" aria-label="Borrar mis datos" title="Borrar mis datos">
               <RotateCcw className="size-4" aria-hidden />
             </button>
           </div>
