@@ -6,36 +6,54 @@ import { periodRange, round2, summarize } from '../lib/calc'
 import { eur, parseAmount } from '../lib/format'
 import { useStore } from '../store'
 
+type Key = 'vat' | 'irpf' | 'quota' | 'fixed' | 'app'
+const FIELDS: { key: Key; label: string; hint: string; max: number; unit: string }[] = [
+  { key: 'fixed', label: 'Gastos fijos al mes (€)', hint: 'Seguro, emisora, gestoría… Se reparten por días', max: 10_000, unit: '€' },
+  { key: 'app', label: 'Comisión de apps (%)', hint: 'Uber, Cabify… sobre lo cobrado por la app', max: 50, unit: '%' },
+  { key: 'quota', label: 'Cuota mensual de autónomos (€)', hint: 'La que pagas tú; no se calcula tramo', max: 2000, unit: '€' },
+  { key: 'irpf', label: 'Reserva orientativa IRPF (%)', hint: 'Supuesto de demostración', max: 60, unit: '%' },
+  { key: 'vat', label: 'IVA de tus servicios (%)', hint: 'El taxi suele aplicar el 10 %', max: 21, unit: '%' },
+]
+
 export function PctForm() {
   const { data, updateSettings, notify } = useStore()
   const uid = useId()
-  const [irpf, setIrpf] = useState(String(data.settings.irpfPct).replace('.', ','))
-  const [quota, setQuota] = useState(String(data.settings.monthlyQuota).replace('.', ','))
-  const [errors, setErrors] = useState<Record<string, string | undefined>>({})
+  const st = data.settings
+  const str = (n: number) => String(n).replace('.', ',')
+  const [v, setV] = useState<Record<Key, string>>({
+    vat: str(st.vatPct), irpf: str(st.irpfPct), quota: str(st.monthlyQuota), fixed: str(st.fixedMonthly), app: str(st.appFeePct),
+  })
+  const [errors, setErrors] = useState<Partial<Record<Key, string>>>({})
 
   const submit = (e: FormEvent) => {
     e.preventDefault()
-    const p = parseAmount(irpf)
-    const q = quota.trim() === '0' ? 0 : parseAmount(quota)
-    const errs = {
-      irpf: p === null || p > 60 ? 'Indica un porcentaje entre 0 y 60.' : undefined,
-      quota: q === null || q > 2000 ? 'Indica una cuota mensual entre 0 y 2.000 €.' : undefined,
+    const n: Partial<Record<Key, number>> = {}
+    const errs: Partial<Record<Key, string>> = {}
+    for (const fd of FIELDS) {
+      const raw = v[fd.key].trim()
+      const x = raw === '' || raw === '0' ? 0 : parseAmount(raw)
+      if (x === null || x > fd.max) errs[fd.key] = `Indica un valor entre 0 y ${fd.max.toLocaleString('es-ES')} ${fd.unit}.`
+      else n[fd.key] = x
     }
     setErrors(errs)
-    if (errs.irpf || errs.quota) return
-    updateSettings({ irpfPct: p!, monthlyQuota: q! })
-    notify('Supuestos actualizados. La reserva se ha recalculado.')
+    const first = FIELDS.find((fd) => errs[fd.key])
+    if (first) {
+      document.getElementById(`${uid}-${first.key}`)?.focus()
+      return
+    }
+    // El IVA nuevo se aplica a lo que apuntes desde ahora; lo ya guardado conserva el suyo
+    updateSettings({ vatPct: n.vat!, irpfPct: n.irpf!, monthlyQuota: n.quota!, fixedMonthly: round2(n.fixed!), appFeePct: n.app! })
+    notify('Ajustes guardados. Las cifras se han recalculado.')
   }
 
   return (
-    <form onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-start">
-      <Field id={`${uid}-irpf`} label="Reserva orientativa IRPF (%)" error={errors.irpf} hint="Supuesto de demostración">
-        <input id={`${uid}-irpf`} inputMode="decimal" value={irpf} onChange={(e) => setIrpf(e.target.value)} className={cx(inputCls(errors.irpf), 'num')} aria-invalid={!!errors.irpf} aria-describedby={describedBy(`${uid}-irpf`, errors.irpf, 'h')} />
-      </Field>
-      <Field id={`${uid}-quota`} label="Cuota mensual de autónomos (€)" error={errors.quota} hint="La que pagas tú; no se calcula tramo">
-        <input id={`${uid}-quota`} inputMode="decimal" value={quota} onChange={(e) => setQuota(e.target.value)} className={cx(inputCls(errors.quota), 'num')} aria-invalid={!!errors.quota} aria-describedby={describedBy(`${uid}-quota`, errors.quota, 'h')} />
-      </Field>
-      <Button type="submit" variant="primary" className="sm:mt-6">Aplicar</Button>
+    <form onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-2">
+      {FIELDS.map((fd) => (
+        <Field key={fd.key} id={`${uid}-${fd.key}`} label={fd.label} error={errors[fd.key]} hint={fd.hint}>
+          <input id={`${uid}-${fd.key}`} inputMode="decimal" value={v[fd.key]} onChange={(e) => setV((o) => ({ ...o, [fd.key]: e.target.value }))} className={cx(inputCls(errors[fd.key]), 'num')} aria-invalid={!!errors[fd.key]} aria-describedby={describedBy(`${uid}-${fd.key}`, errors[fd.key], 'h')} />
+        </Field>
+      ))}
+      <Button type="submit" variant="primary" className="sm:col-span-2 sm:justify-self-start">Guardar ajustes</Button>
     </form>
   )
 }
@@ -78,7 +96,7 @@ export default function Impuestos() {
 
   return (
     <>
-      <PageHeader title="Reserva para impuestos" subtitle="Cuánto deberías tener apartado para no llevarte sustos." />
+      <PageHeader title="Hucha y ajustes" subtitle="Cuánto apartar para no llevarte sustos, y tus gastos fijos." />
 
       <p role="note" className="mb-4 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
         <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
@@ -89,7 +107,7 @@ export default function Impuestos() {
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="IVA cobrado" tone="reserve" value={eur(s.vatCollected)} sub="Registrado en tus ingresos" />
-        <Stat label={`Reserva IRPF (${irpfPct} %)`} tone="reserve" value={eur(s.irpfReserve)} sub={`Sobre ${eur(Math.max(0, s.operatingMargin - s.quota))}`} />
+        <Stat label={`Reserva IRPF (${irpfPct} %)`} tone="reserve" value={eur(s.irpfReserve)} sub={`Sobre ${eur(Math.max(0, s.operatingMargin - s.quota - s.fixedCosts - s.appFee))}`} />
         <Stat label="Reserva fiscal total" tone="reserve" value={eur(s.taxReserve)} sub="IVA + IRPF del periodo" />
         <Stat label="Cuota de autónomos" value={eur(s.quota)} sub={`Aparte · ${s.quotaDays} días imputados`} />
       </div>
@@ -121,13 +139,14 @@ export default function Impuestos() {
             <li><strong className="text-ink">IVA cobrado:</strong> la suma del IVA que has registrado en tus ingresos. Lo cobras para Hacienda, así que se aparta entero.</li>
             <li><strong className="text-ink">Margen operativo:</strong> ingresos sin IVA menos los gastos registrados.</li>
             <li><strong className="text-ink">Cuota imputada:</strong> tu cuota mensual repartida por días según los días de cada mes. Se resta, pero no forma parte de la reserva: la pagas cada mes.</li>
-            <li><strong className="text-ink">Reserva IRPF:</strong> el {irpfPct} % del margen menos la cuota, si es positivo.</li>
+            <li><strong className="text-ink">Gastos fijos y comisión de apps:</strong> los fijos se reparten por días, como la cuota; la comisión es un % de lo cobrado por las apps.</li>
+            <li><strong className="text-ink">Reserva IRPF:</strong> el {irpfPct} % del margen menos la cuota, los fijos y la comisión, si es positivo.</li>
             <li><strong className="text-ink">Reserva fiscal:</strong> IVA cobrado + reserva IRPF.</li>
           </ol>
           <p className="mt-3 text-xs text-ink-3">Simplificaciones: no se descuenta el IVA soportado en los gastos ni se decide qué gastos son deducibles.</p>
-          <div className="mt-4 border-t border-line pt-4">
-            <h3 className="mb-3 text-sm font-semibold">Supuestos de la demo</h3>
-            <PctForm key={`${data.settings.irpfPct}-${data.settings.monthlyQuota}`} />
+          <div data-tour="ajustes" className="mt-4 border-t border-line pt-4">
+            <h3 id="ajustes" className="mb-3 text-sm font-semibold">Tus ajustes</h3>
+            <PctForm key={[data.settings.vatPct, data.settings.irpfPct, data.settings.monthlyQuota, data.settings.fixedMonthly, data.settings.appFeePct].join('|')} />
           </div>
         </Card>
       </div>

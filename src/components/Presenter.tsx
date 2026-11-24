@@ -1,6 +1,7 @@
 import { ArrowLeft, ArrowRight, Mail, X } from 'lucide-react'
 import QRCode from 'qrcode'
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { baseFromTotal } from '../lib/calc'
 import { buildSeed } from '../lib/seed'
 import type { AppData, PeriodKey } from '../lib/types'
 import type { ISODate } from '../lib/dates'
@@ -12,7 +13,8 @@ import { TEAM, initials } from '../lib/team'
 export const DEMO_URL = 'https://jaacobgomez.github.io/nettime-demo/'
 
 // Registros que se crean en directo durante la presentación (ids fijos: avanzar y retroceder es reproducible)
-const INC = { id: 'p-ingreso', concept: 'Carreras del turno de mañana', amount: 186.4, source: 'Calle y paradas' }
+// Ingreso: total del taxímetro con IVA (205,04 € = 186,40 de base + 10 % de IVA, las cifras del S2)
+const INC = { id: 'p-ingreso', concept: 'Carreras del turno de mañana', amount: 205.04, source: 'Calle y paradas' }
 const GAS = { id: 'p-gasto', concept: 'Repostaje gasóleo', amount: 48.9, category: 'Combustible' }
 const SHIFT = { id: 'p-jornada', start: '06:00', end: '14:00', breakMin: 30, activity: 'Taxi · servicio general' }
 
@@ -29,7 +31,7 @@ function baseData(today: ISODate): AppData {
 /** Estado tras aplicar las n primeras acciones del guion, sin animación. */
 function replay(base: AppData, n: number, today: ISODate): AppData {
   let d = base
-  if (n >= 1) d = { ...d, movements: [{ id: INC.id, kind: 'income', date: today, concept: INC.concept, source: INC.source, base: INC.amount, vatRate: 10, shiftId: null }, ...d.movements] }
+  if (n >= 1) d = { ...d, movements: [{ id: INC.id, kind: 'income', date: today, concept: INC.concept, source: INC.source, base: baseFromTotal(INC.amount, 10), vatRate: 10, shiftId: null }, ...d.movements] }
   if (n >= 2) d = { ...d, movements: [{ id: GAS.id, kind: 'expense', date: today, concept: GAS.concept, category: GAS.category, amount: GAS.amount, shiftId: null }, ...d.movements] }
   if (n >= 3) {
     d = {
@@ -44,7 +46,7 @@ function replay(base: AppData, n: number, today: ISODate): AppData {
 type Step = {
   title: string
   caption: string
-  route: 'resumen' | 'impuestos' | 'rentabilidad'
+  route: 'resumen' | 'impuestos'
   highlight?: string
   /** Acciones del guion aplicadas al terminar el paso */
   actions: number
@@ -55,12 +57,12 @@ type Step = {
 }
 
 const STEPS: Step[] = [
-  { title: 'Este es Pablo, taxista en Madrid', caption: 'Arriba, en grande, lo que de verdad le queda: lo facturado menos gastos, cuota de autónomos y reserva de IRPF. Debajo, cuánto es por cada hora.', route: 'resumen', highlight: 'hero', actions: 0 },
-  { title: 'Acaba el turno y apunta lo cobrado', caption: 'Pulsa «Añadir ingreso». Solo hace falta el concepto y el importe.', after: 'Ingreso guardado: el disponible sube, pero solo la parte que es suya. El IVA y el IRPF van aparte.', route: 'resumen', highlight: 'hero', actions: 1, animate: 'inc' },
+  { title: 'Este es Pablo, taxista en Madrid', caption: 'Arriba, en grande, lo que de verdad le queda: lo facturado menos gastos, fijos, cuota de autónomos y reserva de IRPF. Debajo, cuánto es por cada hora.', route: 'resumen', highlight: 'hero', actions: 0 },
+  { title: 'Acaba el turno y apunta lo cobrado', caption: 'Pulsa «Añadir ingreso» y escribe el total del taxímetro, tal cual. El IVA lo separa NetTime.', after: 'Ingreso guardado: el disponible sube, pero solo la parte que es suya. El IVA y el IRPF van aparte.', route: 'resumen', highlight: 'hero', actions: 1, animate: 'inc' },
   { title: 'Ha repostado: apunta el gasto', caption: 'Pulsa «Añadir gasto» y elige la categoría.', after: 'Gasto guardado: se descuenta al momento de lo que le queda.', route: 'resumen', highlight: 'hero', actions: 2, animate: 'gas' },
-  { title: 'Registra su jornada', caption: 'Pulsa «Registrar jornada»: horas, descanso y los movimientos de ese turno.', after: 'Con las horas trabajadas, NetTime ya sabe cuánto le queda por cada hora.', route: 'resumen', highlight: 'hero', actions: 3, animate: 'shift' },
+  { title: 'Registra su jornada', caption: 'Pulsa «Registrar jornada»: hora de inicio y de fin. Lo que apuntó hoy se asocia solo.', after: 'Con las horas trabajadas, NetTime ya sabe cuánto le queda por cada hora.', route: 'resumen', highlight: 'hero', actions: 3, animate: 'shift' },
   { title: '¿Cuánto apartar para Hacienda?', caption: 'La hucha suma el IVA cobrado y la reserva de IRPF, y le dice cuánto le falta por apartar.', route: 'impuestos', highlight: 'hucha', actions: 3 },
-  { title: '¿Cuándo le compensa trabajar?', caption: 'Compara sus propias jornadas por día y franja horaria. Sin predicciones inventadas: solo sus datos.', route: 'rentabilidad', highlight: 'insights', actions: 3 },
+  { title: 'Seguro, emisora y comisión de apps', caption: 'Los gastos fijos y la comisión de Uber o Cabify se ponen una sola vez aquí, y NetTime los reparte solos.', route: 'impuestos', highlight: 'ajustes', actions: 3 },
   { title: 'Deja de trabajar a ciegas', caption: 'Mirad vuestro correo: tenéis la demo para usarla cuando queráis.', route: 'resumen', actions: 3, final: true },
 ]
 

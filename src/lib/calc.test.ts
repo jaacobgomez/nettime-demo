@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
-  dailySeries, dayPartOf, effectiveHours, goalProgress, imputedQuota, periodRange, profitability, shiftStats, summarize,
+  baseFromTotal, dailySeries, dayPartOf, effectiveHours, goalProgress, imputedQuota, periodRange, profitability, shiftStats, summarize,
   unassignedMovements, validateShiftTimes,
 } from './calc'
 import { addDays, daysInMonth, startOfWeek } from './dates'
@@ -171,5 +171,32 @@ describe('persistencia', () => {
     expect(load(TODAY).status).toBe('recovered')
     mem.set(STORAGE_KEY, JSON.stringify({ version: 1, data: { movements: 'x' } }))
     expect(load(TODAY).status).toBe('recovered')
+  })
+})
+
+describe('Sprint 3: total con IVA, gastos fijos y comisión de apps', () => {
+  it('separa la base del total del taxímetro', () => {
+    expect(baseFromTotal(205.04, 10)).toBe(186.4)
+    expect(baseFromTotal(110, 10)).toBe(100)
+    expect(baseFromTotal(50, 0)).toBe(50)
+  })
+  it('resta los fijos por días y la comisión solo de lo cobrado por apps', () => {
+    const d = empty()
+    d.settings = { ...d.settings, monthlyQuota: 0, irpfPct: 0, fixedMonthly: 300, appFeePct: 15 }
+    d.movements = [
+      { id: 'a', kind: 'income', date: '2026-11-01', concept: 'App', source: 'Aplicación de reservas', base: 100, vatRate: 10, shiftId: null },
+      { id: 'b', kind: 'income', date: '2026-11-01', concept: 'Calle', source: 'Calle y paradas', base: 200, vatRate: 10, shiftId: null },
+    ]
+    const s = summarize(d, { from: '2026-11-01', to: '2026-11-01' }, '2026-11-01')
+    expect(s.fixedCosts).toBe(10) // 300 € / 30 días
+    expect(s.appFee).toBe(15) // 15 % de 100
+    expect(s.available).toBe(275)
+  })
+  it('migra los datos guardados de la versión 2 con ajustes neutros', () => {
+    const v2 = { ...empty(), settings: { name: '', activity: '', monthlyQuota: 300, irpfPct: 15, monthlyGoal: 0, setAside: 0 } }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 2, data: v2 }))
+    const r = load(TODAY)
+    expect(r.status).toBe('saved')
+    expect(r.data.settings).toMatchObject({ vatPct: 10, fixedMonthly: 0, appFeePct: 0, monthlyQuota: 300 })
   })
 })

@@ -1,9 +1,9 @@
 import { Moon } from 'lucide-react'
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react'
-import { crossesMidnight, effectiveMinutes, round2, validateShiftTimes } from '../lib/calc'
+import { baseFromTotal, crossesMidnight, effectiveMinutes, round2, totalOf, validateShiftTimes } from '../lib/calc'
 import { addDays, isValidISO, isValidTime, type ISODate } from '../lib/dates'
-import { dateMed, eur, hoursLabel, parseAmount } from '../lib/format'
-import { EXPENSE_CATEGORIES, INCOME_SOURCES, SHIFT_ACTIVITIES, VAT_RATES, type Movement, type Shift } from '../lib/types'
+import { eur, hoursLabel, parseAmount } from '../lib/format'
+import { EXPENSE_CATEGORIES, INCOME_SOURCES, SHIFT_ACTIVITIES } from '../lib/types'
 import { useStore, type FormRequest } from '../store'
 import { Button, Dialog, Field, cx, describedBy, inputCls } from './ui'
 
@@ -39,7 +39,6 @@ function amountError(raw: string, label: string): string | undefined {
   if (n > 100_000) return 'El importe parece demasiado alto. Revísalo.'
 }
 
-const shiftLabel = (s: Shift) => `${dateMed(s.date)} · ${s.start}–${s.end}`
 
 // ───────────── Movimiento ─────────────
 
@@ -55,9 +54,11 @@ function MovementForm({ req }: { req: Extract<FormRequest, { type: 'movement' }>
   const [concept, setConcept] = useState(editing?.concept ?? '')
   const [source, setSource] = useState(editing?.kind === 'income' ? editing.source : INCOME_SOURCES[0])
   const [category, setCategory] = useState(editing?.kind === 'expense' ? editing.category : EXPENSE_CATEGORIES[0])
-  const [amount, setAmount] = useState(editing ? toInput(editing.kind === 'income' ? editing.base : editing.amount) : '')
-  const [vatRate, setVatRate] = useState(editing?.kind === 'income' ? editing.vatRate : 10)
-  const [shiftId, setShiftId] = useState<string>(editing?.shiftId ?? req.shiftId ?? '')
+  // Ingresos: se escribe el total cobrado (con IVA), como lo da el taxímetro; la base se calcula al guardar
+  const [amount, setAmount] = useState(editing ? toInput(editing.kind === 'income' ? totalOf(editing) : editing.amount) : '')
+  // Al editar, se respeta el IVA con el que se guardó; lo nuevo usa el de los ajustes
+  const vatPct = editing?.kind === 'income' ? editing.vatRate : data.settings.vatPct
+  const wantedShift = editing?.shiftId ?? req.shiftId ?? ''
   const [errors, setErrors] = useState<Record<string, string | undefined>>({})
 
   // Modo presentación: escribe el formulario en directo y guarda al terminar
@@ -70,7 +71,7 @@ function MovementForm({ req }: { req: Extract<FormRequest, { type: 'movement' }>
     spotField(null)
     saveMovement(
       isInc
-        ? { id: auto.id, kind: 'income', date, concept: auto.concept, source: auto.source ?? INCOME_SOURCES[0], base: auto.amount, vatRate: 10, shiftId: auto.shiftId ?? null }
+        ? { id: auto.id, kind: 'income', date, concept: auto.concept, source: auto.source ?? INCOME_SOURCES[0], base: baseFromTotal(auto.amount, vatPct), vatRate: vatPct, shiftId: auto.shiftId ?? null }
         : { id: auto.id, kind: 'expense', date, concept: auto.concept, category: auto.category ?? EXPENSE_CATEGORIES[0], amount: auto.amount, shiftId: auto.shiftId ?? null },
     )
     notify(isInc ? 'Ingreso añadido.' : 'Gasto añadido.')
@@ -89,12 +90,9 @@ function MovementForm({ req }: { req: Extract<FormRequest, { type: 'movement' }>
     if (auto.category) setCategory(auto.category)
     say(f(isInc ? 'source' : 'category'), isInc ? 'Fuente: de dónde viene el dinero.' : 'Categoría: así sabe en qué se le va el dinero.')
     t += 1600
-    say(f('concept'), 'Concepto: una descripción corta para reconocerlo luego.')
-    t += 600
-    for (let k = 1; k <= auto.concept.length; k++) at((t += 70), () => setConcept(auto.concept.slice(0, k)))
     const amt = auto.amount.toFixed(2).replace('.', ',')
     t += 900
-    say(f('amount'), isInc ? 'Importe sin IVA: el IVA se calcula aparte, porque no es suyo.' : 'Importe pagado, tal cual sale en el tique.')
+    say(f('amount'), isInc ? 'El total del taxímetro, tal cual. NetTime separa el IVA solo, porque no es suyo.' : 'Importe pagado, tal cual sale en el tique.')
     t += 600
     for (let k = 1; k <= amt.length; k++) at((t += 170), () => setAmount(amt.slice(0, k)))
     t += isInc ? 2600 : 1600
@@ -112,17 +110,21 @@ function MovementForm({ req }: { req: Extract<FormRequest, { type: 'movement' }>
     () => data.shifts.filter((s) => s.date === date || (s.date === addDays(date, -1) && crossesMidnight(s))),
     [data.shifts, date],
   )
-  const selectedShift = shifts.some((s) => s.id === shiftId) ? shiftId : ''
+  // Se asocia sola a la jornada de ese día (la que tenía, si sigue encajando)
+  // Sin hora en los movimientos no se puede elegir entre dos jornadas: si hay duda, queda sin asociar
+  const sameDay = shifts.filter((s) => s.date === date)
+  const autoShift = shifts.find((s) => s.id === wantedShift)?.id
+    ?? (sameDay.length === 1 ? sameDay[0].id : sameDay.length === 0 && shifts.length === 1 ? shifts[0].id : null)
 
-  const base = parseAmount(amount)
-  const vatPreview = isInc && base !== null ? round2((base * vatRate) / 100) : 0
+  const total = parseAmount(amount)
+  const basePreview = isInc && total !== null ? baseFromTotal(total, vatPct) : 0
 
   const submit = (e: FormEvent) => {
     e.preventDefault()
     const errs = {
       date: validDate(date, today),
-      concept: !concept.trim() ? 'Escribe un concepto.' : concept.trim().length > 80 ? 'Máximo 80 caracteres.' : undefined,
-      amount: amountError(amount, isInc ? 'el importe base' : 'el importe pagado'),
+      concept: concept.trim().length > 80 ? 'Máximo 80 caracteres.' : undefined,
+      amount: amountError(amount, isInc ? 'el total cobrado' : 'el importe pagado'),
     }
     setErrors(errs)
     const first = Object.entries(errs).find(([, v]) => v)
@@ -130,11 +132,11 @@ function MovementForm({ req }: { req: Extract<FormRequest, { type: 'movement' }>
       document.getElementById(f(first[0]))?.focus()
       return
     }
-    const common = { id: editing?.id, date, concept: concept.trim(), shiftId: selectedShift || null }
+    const common = { id: editing?.id, date, concept: concept.trim() || (isInc ? source : category), shiftId: autoShift }
     const value = round2(parseAmount(amount)!)
     saveMovement(
       isInc
-        ? { ...common, kind: 'income', source, base: value, vatRate }
+        ? { ...common, kind: 'income', source, base: baseFromTotal(value, vatPct), vatRate: vatPct }
         : { ...common, kind: 'expense', category, amount: value },
     )
     notify(editing ? 'Cambios guardados. Los totales ya están actualizados.' : isInc ? 'Ingreso añadido. Revisa cómo cambian el disponible y la reserva.' : 'Gasto añadido. Los totales ya están actualizados.')
@@ -174,36 +176,21 @@ function MovementForm({ req }: { req: Extract<FormRequest, { type: 'movement' }>
           </Field>
         )}
         <div className="sm:col-span-2">
-          <Field id={f('concept')} label="Concepto" error={errors.concept}>
+          <Field id={f('concept')} label="Concepto (opcional)" error={errors.concept}>
             <input id={f('concept')} value={concept} onChange={(e) => setConcept(e.target.value)} maxLength={80} placeholder={isInc ? 'Ej.: Carreras por aplicación' : 'Ej.: Repostaje gasóleo'} className={inputCls(errors.concept)} aria-invalid={!!errors.concept} aria-describedby={describedBy(f('concept'), errors.concept)} autoComplete="off" />
           </Field>
         </div>
-        <Field id={f('amount')} label={isInc ? 'Importe base (sin IVA)' : 'Importe pagado'} error={errors.amount} hint="En euros. Ej.: 45,80">
+        <Field id={f('amount')} label={isInc ? 'Total cobrado (con IVA)' : 'Importe pagado'} error={errors.amount} hint={isInc ? 'Lo que marca el taxímetro. Ej.: 245,80' : 'En euros. Ej.: 45,80'}>
           <div className="relative">
             <input id={f('amount')} inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} className={cx(inputCls(errors.amount), 'num pr-8')} aria-invalid={!!errors.amount} aria-describedby={describedBy(f('amount'), errors.amount, 'hint')} autoComplete="off" />
             <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-sm text-ink-3" aria-hidden>€</span>
           </div>
         </Field>
-        {isInc ? (
-          <Field id={f('vat')} label="IVA repercutido (ejemplo)" hint="El taxi suele aplicar el 10 %. Configurable.">
-            <select id={f('vat')} value={vatRate} onChange={(e) => setVatRate(Number(e.target.value))} className={inputCls()} aria-describedby={`${f('vat')}-hint`}>
-              {VAT_RATES.map((r) => <option key={r} value={r}>{r} %</option>)}
-            </select>
-          </Field>
-        ) : <div className="hidden sm:block" />}
-        {isInc && base !== null && base > 0 && (
+        {isInc && total !== null && total > 0 && (
           <p className="num rounded-lg bg-income-50 px-3 py-2 text-sm text-income-700 sm:col-span-2">
-            Base {eur(base)} + IVA {eur(vatPreview)} = <strong>{eur(base + vatPreview)}</strong> cobrados. El IVA va a la reserva fiscal, no al disponible.
+            {eur(total)} cobrados = base {eur(basePreview)} + IVA {eur(round2((basePreview * vatPct) / 100))} ({vatPct} %). El IVA va a la reserva fiscal, no al disponible.
           </p>
         )}
-        <div className="sm:col-span-2">
-          <Field id={f('shift')} label="Jornada asociada (opcional)" hint={shifts.length ? 'Sirve para comparar días y horarios. Un movimiento solo puede estar en una jornada.' : 'No hay jornadas registradas en esa fecha.'}>
-            <select id={f('shift')} value={selectedShift} onChange={(e) => setShiftId(e.target.value)} className={inputCls()} disabled={!shifts.length} aria-describedby={`${f('shift')}-hint`}>
-              <option value="">Sin asociar</option>
-              {shifts.map((s) => <option key={s.id} value={s.id}>{shiftLabel(s)}</option>)}
-            </select>
-          </Field>
-        </div>
       </form>
     </Dialog>
   )
@@ -220,11 +207,8 @@ function ShiftForm({ req }: { req: Extract<FormRequest, { type: 'shift' }> }) {
   const [date, setDate] = useState(editing?.date ?? today)
   const [start, setStart] = useState(editing?.start ?? '07:00')
   const [end, setEnd] = useState(editing?.end ?? '15:00')
-  const [breakRaw, setBreakRaw] = useState(String(editing?.breakMin ?? 30))
-  const [activity, setActivity] = useState(editing?.activity ?? SHIFT_ACTIVITIES[0])
-  const [selected, setSelected] = useState<Set<string>>(
-    () => new Set(editing ? data.movements.filter((m) => m.shiftId === editing.id).map((m) => m.id) : []),
-  )
+  const [breakRaw, setBreakRaw] = useState(String(editing?.breakMin ?? 0))
+  const activity = editing?.activity ?? SHIFT_ACTIVITIES[0]
   const [errors, setErrors] = useState<Record<string, string | undefined>>({})
 
   // Modo presentación: rellena la jornada, marca sus movimientos y guarda
@@ -249,7 +233,6 @@ function ShiftForm({ req }: { req: Extract<FormRequest, { type: 'shift' }> }) {
     const at = (ms: number, fn: () => void) => timers.push(window.setTimeout(fn, ms))
     const say = (id: string | null, text: string) => at(t, () => { spotField(id); setNote(text) })
     setDate(auto.date)
-    setActivity(auto.activity)
     say(f('start'), 'Hora de inicio del turno.')
     at((t += 700), () => setStart(auto.start))
     t += 1000
@@ -259,11 +242,8 @@ function ShiftForm({ req }: { req: Extract<FormRequest, { type: 'shift' }> }) {
     say(f('breakMin'), 'Descanso: no cuenta como hora trabajada.')
     at((t += 700), () => setBreakRaw(String(auto.breakMin)))
     t += 1300
-    auto.movementIds.forEach((id, n) => {
-      say(f(`mov-${id}`), n === 0 ? 'Marca lo que cobró y gastó en este turno.' : 'Y el repostaje, que también fue en este turno.')
-      at((t += 800), () => setSelected((sel) => new Set(sel).add(id)))
-      t += 1000
-    })
+    say(null, 'Lo que cobró y gastó hoy se asocia solo a esta jornada.')
+    t += 1800
     say(null, 'Guardando…')
     at((t += 900), () => finishRef.current())
     return () => {
@@ -273,7 +253,8 @@ function ShiftForm({ req }: { req: Extract<FormRequest, { type: 'shift' }> }) {
   }, [auto])
   const close = () => (auto ? finish() : closeForm())
 
-  const breakMin = /^\d+$/.test(breakRaw.trim()) ? Number(breakRaw) : NaN
+  // Descanso opcional: vacío cuenta como 0
+  const breakMin = breakRaw.trim() === '' ? 0 : /^\d+$/.test(breakRaw.trim()) ? Number(breakRaw) : NaN
   const timesOk = isValidTime(start) && isValidTime(end)
   const overnight = timesOk && start !== end && crossesMidnight({ start, end })
   const preview = timesOk && Number.isFinite(breakMin) && Object.keys(validateShiftTimes(start, end, breakMin)).length === 0
@@ -281,19 +262,20 @@ function ShiftForm({ req }: { req: Extract<FormRequest, { type: 'shift' }> }) {
     : null
 
   const candidates = useMemo(() => {
-    const days = new Set([date, ...(overnight ? [addDays(date, 1)] : [])])
+    // Del día siguiente solo si ese día no tiene su propia jornada
+    const next = addDays(date, 1)
+    const takeNext = overnight && !data.shifts.some((s) => s.date === next && s.id !== editing?.id)
+    const days = new Set([date, ...(takeNext ? [next] : [])])
     return data.movements.filter((m) => days.has(m.date))
-  }, [data.movements, date, overnight])
+  }, [data.movements, data.shifts, date, overnight, editing?.id])
 
   const shiftById = useMemo(() => new Map(data.shifts.map((s) => [s.id, s])), [data.shifts])
 
-  const toggle = (id: string) =>
-    setSelected((s) => {
-      const n = new Set(s)
-      if (n.has(id)) n.delete(id)
-      else n.add(id)
-      return n
-    })
+  // Movimientos que se asocian solos: los de esas fechas que no están en otra jornada
+  const linked = useMemo(
+    () => candidates.filter((m) => !m.shiftId || m.shiftId === editing?.id || !shiftById.has(m.shiftId)),
+    [candidates, editing?.id, shiftById],
+  )
 
   const submit = (e: FormEvent) => {
     e.preventDefault()
@@ -310,7 +292,7 @@ function ShiftForm({ req }: { req: Extract<FormRequest, { type: 'shift' }> }) {
       document.getElementById(f(first))?.focus()
       return
     }
-    const ids = candidates.filter((m) => selected.has(m.id)).map((m) => m.id)
+    const ids = linked.map((m) => m.id)
     saveShift({ id: editing?.id, date, start, end, breakMin, activity }, ids)
     closeForm()
     if (!editing && ids.length === 0) {
@@ -319,9 +301,6 @@ function ShiftForm({ req }: { req: Extract<FormRequest, { type: 'shift' }> }) {
       notify(editing ? 'Jornada actualizada.' : 'Jornada registrada. El cálculo por hora ya está actualizado.')
     }
   }
-
-  const movLabel = (m: Movement) =>
-    m.kind === 'income' ? `+${eur(m.base)} · ${m.concept}` : `−${eur(m.amount)} · ${m.concept}`
 
   return (
     <Dialog
@@ -343,13 +322,6 @@ function ShiftForm({ req }: { req: Extract<FormRequest, { type: 'shift' }> }) {
             <input id={f('date')} type="date" max={today} value={date} onChange={(e) => setDate(e.target.value)} className={inputCls(errors.date)} aria-invalid={!!errors.date} aria-describedby={describedBy(f('date'), errors.date)} />
           </Field>
         </div>
-        <div className="sm:col-span-3">
-          <Field id={f('activity')} label="Fuente o actividad">
-            <select id={f('activity')} value={activity} onChange={(e) => setActivity(e.target.value)} className={inputCls()}>
-              {SHIFT_ACTIVITIES.map((a) => <option key={a}>{a}</option>)}
-            </select>
-          </Field>
-        </div>
         <div className="sm:col-span-2">
           <Field id={f('start')} label="Inicio" error={errors.start}>
             <input id={f('start')} type="time" value={start} onChange={(e) => setStart(e.target.value)} className={inputCls(errors.start)} aria-invalid={!!errors.start} aria-describedby={describedBy(f('start'), errors.start)} />
@@ -361,7 +333,7 @@ function ShiftForm({ req }: { req: Extract<FormRequest, { type: 'shift' }> }) {
           </Field>
         </div>
         <div className="sm:col-span-2">
-          <Field id={f('breakMin')} label="Descanso (min)" error={errors.breakMin}>
+          <Field id={f('breakMin')} label="Descanso (min, opcional)" error={errors.breakMin}>
             <input id={f('breakMin')} inputMode="numeric" value={breakRaw} onChange={(e) => setBreakRaw(e.target.value)} className={cx(inputCls(errors.breakMin), 'num')} aria-invalid={!!errors.breakMin} aria-describedby={describedBy(f('breakMin'), errors.breakMin)} autoComplete="off" />
           </Field>
         </div>
@@ -373,37 +345,11 @@ function ShiftForm({ req }: { req: Extract<FormRequest, { type: 'shift' }> }) {
           )}
         </div>
 
-        <fieldset className="sm:col-span-6">
-          <legend className="mb-1 text-sm font-medium text-ink">Movimientos de la jornada</legend>
-          <p className="mb-2 text-xs text-ink-3">
-            Marca los ingresos y gastos que pertenecen a esta jornada{overnight ? ' (de ese día y del siguiente)' : ''}. No se duplican: si ya estaban en otra jornada, pasan a esta.
-          </p>
-          {candidates.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-line px-3 py-4 text-sm text-ink-2">
-              No hay movimientos en esa fecha. Registra la jornada y, después, añade sus ingresos y gastos eligiéndola en «Jornada asociada».
-            </div>
-          ) : (
-            <ul className="max-h-56 divide-y divide-line overflow-y-auto rounded-lg border border-line">
-              {candidates.map((m) => {
-                const other = m.shiftId && m.shiftId !== editing?.id ? shiftById.get(m.shiftId) : undefined
-                return (
-                  <li key={m.id}>
-                    <label id={f(`mov-${m.id}`)} className="flex cursor-pointer items-start gap-3 px-3 py-2 text-sm hover:bg-canvas">
-                      <input type="checkbox" checked={selected.has(m.id)} onChange={() => toggle(m.id)} className="mt-0.5 size-4 accent-ink" />
-                      <span className="min-w-0 flex-1">
-                        <span className="num block truncate">{movLabel(m)}</span>
-                        <span className="block text-xs text-ink-3">
-                          {m.kind === 'income' ? 'Ingreso' : 'Gasto'} · {dateMed(m.date)}
-                          {other && ` · ahora en la jornada ${other.start}–${other.end}`}
-                        </span>
-                      </span>
-                    </label>
-                  </li>
-                )
-              })}
-            </ul>
-          )}
-        </fieldset>
+        <p className="text-xs text-ink-3 sm:col-span-6">
+          {linked.length === 0
+            ? 'Cuando apuntes lo cobrado y lo gastado ese día, se asociará solo a esta jornada.'
+            : `Se asocian solos ${linked.length === 1 ? 'el movimiento' : `los ${linked.length} movimientos`} de ese día.`}
+        </p>
       </form>
     </Dialog>
   )

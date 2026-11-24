@@ -1,4 +1,4 @@
-import { ArrowLeftRight, CalendarClock, ChartColumnBig, CircleHelp, LayoutDashboard, PiggyBank, Presentation, RotateCcw, Target } from 'lucide-react'
+import { ArrowLeftRight, CalendarClock, CircleHelp, LayoutDashboard, PiggyBank, Presentation, RotateCcw } from 'lucide-react'
 import { useState, type CSSProperties, type ReactNode } from 'react'
 import markUrl from '../assets/brand/logo-mark.png'
 import wordUrl from '../assets/brand/logo-word.png'
@@ -6,15 +6,14 @@ import { useStore } from '../store'
 import { usePresentation } from './Presenter'
 import { ConfirmDialog, cx } from './ui'
 
-export type Route = 'resumen' | 'movimientos' | 'jornadas' | 'impuestos' | 'rentabilidad' | 'objetivo'
+// S3: «Días y horarios» y «Objetivo» salen del MVP (backlog del Sprint 4); sus ajustes pasan a la Hucha
+export type Route = 'resumen' | 'movimientos' | 'jornadas' | 'impuestos'
 
 export const ROUTES: { id: Route; label: string; short: string; icon: typeof LayoutDashboard }[] = [
   { id: 'resumen', label: 'Resumen', short: 'Resumen', icon: LayoutDashboard },
   { id: 'movimientos', label: 'Movimientos', short: 'Movim.', icon: ArrowLeftRight },
   { id: 'jornadas', label: 'Jornadas y horas', short: 'Jornadas', icon: CalendarClock },
-  { id: 'impuestos', label: 'Hucha de impuestos', short: 'Hucha', icon: PiggyBank },
-  { id: 'rentabilidad', label: 'Días y horarios', short: 'Horarios', icon: ChartColumnBig },
-  { id: 'objetivo', label: 'Objetivo y ajustes', short: 'Objetivo', icon: Target },
+  { id: 'impuestos', label: 'Hucha y ajustes', short: 'Hucha', icon: PiggyBank },
 ]
 
 /** Logo oficial de NetTime (símbolo + «netTime»), coloreado con currentColor. */
@@ -133,7 +132,7 @@ export function Layout({ route, children }: { route: Route; children: ReactNode 
       </div>
 
       {/* Móvil y tableta: navegación inferior */}
-      <nav aria-label="Principal" data-tour="nav" className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-line bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
+      <nav aria-label="Principal" data-tour="nav" className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-line bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
         {ROUTES.map(({ id, short, label, icon: Icon }) => (
           <a
             key={id}

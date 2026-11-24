@@ -11,6 +11,9 @@ export const DEFAULT_SETTINGS: Settings = {
   irpfPct: 15,
   monthlyGoal: 2200,
   setAside: 900,
+  vatPct: 10,
+  fixedMonthly: 0,
+  appFeePct: 0,
 }
 
 const WEEKS = 7

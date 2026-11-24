@@ -88,8 +88,8 @@ export default function Jornadas() {
       <Card className="mt-4" aria-labelledby="sueltos">
         <CardTitle id="sueltos">Movimientos sin asociar · {loose.length}</CardTitle>
         <p className="text-sm text-ink-2">
-          Cuentan en el resumen y en la reserva fiscal, pero no en la comparativa de días y horarios, porque no pertenecen a ninguna jornada.
-          Suelen ser gastos fijos como el seguro, el teléfono o la gestoría.
+          Cuentan en el resumen y en la reserva fiscal, pero no en el rendimiento de ninguna jornada.
+          Los gastos fijos de cada mes (seguro, emisora, gestoría) mejor ponlos una vez en «Hucha y ajustes».
         </p>
         {loose.length === 0 ? (
           <p className="mt-3 flex items-center gap-2 text-sm text-ink-3"><Link2Off className="size-4" aria-hidden /> Todos los movimientos del periodo están asociados.</p>
@@ -108,7 +108,7 @@ export default function Jornadas() {
           </>
         )}
         <Help summary="¿Cómo se asocian?">
-          <p>Al registrar o editar una jornada, marca los movimientos de ese día (y del siguiente si termina después de medianoche). También puedes elegir la jornada desde el formulario de cada movimiento.</p>
+          <p>Los movimientos de ese día se asocian solos a la jornada (y los del siguiente si termina después de medianoche y ese día no tiene jornada). Si hay dos jornadas el mismo día, quedan sin asociar.</p>
           <p>Cada movimiento solo puede estar en una jornada, así que nunca se cuenta dos veces. Si borras una jornada, sus movimientos se conservan y pasan a estar sin asociar.</p>
         </Help>
       </Card>

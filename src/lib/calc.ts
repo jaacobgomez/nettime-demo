@@ -3,7 +3,7 @@ import {
   addDays, daysInMonth, eachDay, endOfMonth, minutesOf, startOfMonth, startOfWeek, weekdayMon0,
   type ISODate,
 } from './dates'
-import type { AppData, Expense, Income, Movement, PeriodKey, Shift } from './types'
+import { APP_SOURCE, type AppData, type Expense, type Income, type Movement, type PeriodKey, type Shift } from './types'
 
 export const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100
 
@@ -14,6 +14,12 @@ export const vatOf = (m: Income) => round2((m.base * m.vatRate) / 100)
 
 /** Lo que mueve el movimiento en el resultado: base para ingresos, importe pagado para gastos. */
 export const netAmount = (m: Movement) => (isIncome(m) ? m.base : m.amount)
+
+/** El taxímetro da el total cobrado (con IVA): aquí se separa la base. */
+export const baseFromTotal = (total: number, vatPct: number) => round2(total / (1 + vatPct / 100))
+
+/** Total cobrado de un ingreso (base + IVA). */
+export const totalOf = (m: Income) => round2(m.base + vatOf(m))
 
 // ───────────── Jornadas ─────────────
 
@@ -118,6 +124,10 @@ export type Summary = {
   expenses: number
   operatingMargin: number
   quota: number
+  /** Gastos fijos al mes, imputados por días como la cuota */
+  fixedCosts: number
+  /** Comisión de las apps sobre lo cobrado por ellas */
+  appFee: number
   irpfReserve: number
   available: number
   taxReserve: number
@@ -150,10 +160,13 @@ export function summarize(data: AppData, r: Range, today: ISODate): Summary {
   const end = first === null ? null : imputationEnd(data, r, today)
   const quota = imputedQuota(data.settings.monthlyQuota, start, end)
   const quotaDays = end === null || end < start ? 0 : eachDay(start, end).length
+  const fixedCosts = imputedQuota(data.settings.fixedMonthly, start, end)
+  const appBase = movs.filter(isIncome).filter((m) => m.source === APP_SOURCE).reduce((a, m) => a + m.base, 0)
+  const appFee = round2((appBase * data.settings.appFeePct) / 100)
 
-  const irpfBase = Math.max(0, operatingMargin - quota)
+  const irpfBase = Math.max(0, operatingMargin - quota - fixedCosts - appFee)
   const irpfReserve = round2((irpfBase * data.settings.irpfPct) / 100)
-  const available = round2(operatingMargin - quota - irpfReserve)
+  const available = round2(operatingMargin - quota - fixedCosts - appFee - irpfReserve)
 
   const minutes = shifts.reduce((a, s) => a + effectiveMinutes(s), 0)
   const hours = minutes / 60
@@ -166,6 +179,8 @@ export function summarize(data: AppData, r: Range, today: ISODate): Summary {
     expenses,
     operatingMargin,
     quota,
+    fixedCosts,
+    appFee,
     irpfReserve,
     available,
     taxReserve: round2(vatCollected + irpfReserve),

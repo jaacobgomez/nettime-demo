@@ -8,8 +8,6 @@ import Impuestos from './pages/Impuestos'
 import Jornadas from './pages/Jornadas'
 import Landing from './pages/Landing'
 import Movimientos from './pages/Movimientos'
-import Objetivo from './pages/Objetivo'
-import Rentabilidad from './pages/Rentabilidad'
 import Resumen from './pages/Resumen'
 import { StoreProvider } from './store'
 
@@ -18,8 +16,6 @@ const PAGES: Record<Route, () => React.JSX.Element> = {
   movimientos: Movimientos,
   jornadas: Jornadas,
   impuestos: Impuestos,
-  rentabilidad: Rentabilidad,
-  objetivo: Objetivo,
 }
 
 /** Portada one page: sin hash, «#», «#/» o «#/inicio». */

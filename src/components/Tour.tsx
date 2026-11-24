@@ -14,7 +14,7 @@ const STEPS: Step[] = [
   {
     target: 'hero',
     title: 'Deja de trabajar a ciegas',
-    body: 'Lo que facturas por hora no es lo que te queda. Aquí ves tu disponible después de gastos, cuota de autónomos y reserva de IRPF, y cuánto es por cada hora trabajada.',
+    body: 'Lo que facturas por hora no es lo que te queda. Aquí ves tu disponible después de gastos, gastos fijos, comisión de apps, cuota de autónomos y reserva de IRPF, y cuánto es por cada hora trabajada.',
   },
   {
     target: 'period',
@@ -24,17 +24,17 @@ const STEPS: Step[] = [
   {
     target: 'actions',
     title: 'Registra en segundos',
-    body: 'Añade un ingreso al terminar una carrera, un gasto al repostar o la jornada completa. Prueba ahora: los totales cambian al guardar.',
+    body: 'Al acabar el día, apunta el total del taxímetro (con IVA, NetTime lo separa solo) y la hora de inicio y de fin. Los gastos, cuando repostes. Los totales cambian al guardar.',
   },
   {
     target: 'breakdown',
     title: 'De lo que facturas a lo que te queda',
-    body: 'El desglose muestra qué se lleva cada parte: gastos, cuota y reserva de IRPF. El IVA va aparte porque no es tuyo.',
+    body: 'El desglose muestra qué se lleva cada parte: gastos, fijos, comisión de apps, cuota y reserva de IRPF. El IVA va aparte porque no es tuyo.',
   },
   {
     target: 'nav',
-    title: 'Todo lo demás, aquí',
-    body: 'En la hucha ves cuánto apartar para impuestos, y en «Días y horarios», cuándo te compensa trabajar según tus propios registros.',
+    title: 'Tus gastos fijos, una sola vez',
+    body: 'En «Hucha y ajustes» pones el seguro, la emisora y la comisión de las apps, y ves cuánto apartar para Hacienda.',
   },
   {
     target: 'help',

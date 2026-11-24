@@ -78,11 +78,13 @@ function Hero({ s, label }: { s: Summary; label: string }) {
 }
 
 function Breakdown({ s }: { s: Summary }) {
-  const max = Math.max(s.incomeBase, s.expenses + s.quota + s.irpfReserve, 1)
+  const max = Math.max(s.incomeBase, s.expenses + s.quota + s.fixedCosts + s.appFee + s.irpfReserve, 1)
   const rows = [
     { label: 'Ingresos sin IVA', value: s.incomeBase, sign: '', color: 'bg-income' },
     { label: 'Gastos registrados', value: s.expenses, sign: '−', color: 'bg-expense' },
     { label: `Cuota imputada · ${s.quotaDays} ${s.quotaDays === 1 ? 'día' : 'días'}`, value: s.quota, sign: '−', color: 'bg-quota' },
+    ...(s.fixedCosts > 0 ? [{ label: 'Gastos fijos (seguro, emisora…)', value: s.fixedCosts, sign: '−', color: 'bg-quota' }] : []),
+    ...(s.appFee > 0 ? [{ label: 'Comisión de apps', value: s.appFee, sign: '−', color: 'bg-expense' }] : []),
     { label: 'Reserva IRPF orientativa', value: s.irpfReserve, sign: '−', color: 'bg-reserve' },
   ]
   const negative = s.available < 0
@@ -116,7 +118,7 @@ function Breakdown({ s }: { s: Summary }) {
       </p>
       <Help summary="¿Qué se descuenta?">
         <p><strong>Ingresos sin IVA − gastos</strong> = margen operativo.</p>
-        <p>Se resta la <strong>cuota de autónomos</strong> repartida por días (solo hasta hoy) y una <strong>reserva orientativa de IRPF</strong>, un porcentaje que eliges sobre lo que queda.</p>
+        <p>Se restan la <strong>cuota de autónomos</strong> y tus <strong>gastos fijos</strong> repartidos por días (solo hasta hoy), la <strong>comisión de apps</strong> y una <strong>reserva orientativa de IRPF</strong>, un porcentaje que eliges sobre lo que queda.</p>
         <p>El IVA nunca se suma, así que no se descuenta dos veces. La demo no recupera IVA soportado ni decide qué gastos son deducibles.</p>
       </Help>
     </div>

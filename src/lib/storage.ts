@@ -5,7 +5,7 @@ import type { AppData, Movement, Settings, Shift } from './types'
 
 // Clave nueva: quien abrió la demo del Sprint 2 (con datos de ejemplo guardados) empieza de cero.
 export const STORAGE_KEY = 'nettime-datos'
-export const STORAGE_VERSION = 2
+export const STORAGE_VERSION = 3
 
 type Stored = { version: number; data: AppData }
 
@@ -28,7 +28,7 @@ function validShift(v: unknown): v is Shift {
 
 function validSettings(v: unknown): v is Settings {
   return isRec(v) && isStr(v.name) && isStr(v.activity) && isNum(v.monthlyQuota) && isNum(v.irpfPct) &&
-    isNum(v.monthlyGoal) && isNum(v.setAside)
+    isNum(v.monthlyGoal) && isNum(v.setAside) && isNum(v.vatPct) && isNum(v.fixedMonthly) && isNum(v.appFeePct)
 }
 
 export function validateData(v: unknown): v is AppData {
@@ -43,6 +43,11 @@ function migrate(stored: { version: number; data: unknown }): unknown {
   if (version === 1 && isRec(data) && isRec(data.settings)) {
     if (data.settings.name === 'Javier Morales') data = { ...data, settings: { ...data.settings, name: 'Pablo Álvarez' } }
     version = 2
+  }
+  // v2 → v3: IVA configurable, gastos fijos al mes y comisión de app (sin datos previos: valores neutros)
+  if (version === 2 && isRec(data) && isRec(data.settings)) {
+    data = { ...data, settings: { vatPct: 10, fixedMonthly: 0, appFeePct: 0, ...data.settings } }
+    version = 3
   }
   return version === STORAGE_VERSION ? data : null
 }
